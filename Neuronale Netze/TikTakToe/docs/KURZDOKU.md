@@ -1,6 +1,6 @@
 # TikTakToe – Kurzdoku
 
-Stand: 2026-10-13 · Jonas Pichler
+Stand: 2026-10-13 · Jonas Pichler und Sarah Krottenhammer 
 
 ## Was gemacht wurde
 
