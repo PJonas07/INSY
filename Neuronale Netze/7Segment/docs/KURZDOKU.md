@@ -1,6 +1,6 @@
 # 7Segment – Kurzdoku
 
-Stand: 2026-10-13 · Jonas Pichler
+Stand: 2026-10-13 · Jonas Pichler und Petra Bernroitner 
 
 ## Was gemacht wurde
 
