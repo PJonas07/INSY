@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example
+**/Secrets.xcconfig
+
+# Xcode / Swift
+xcuserdata/
+DerivedData/
+build/
+.build/
+*.xcuserstate
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+
+# Claude (lokale, persönliche Einstellungen)
+.claude/settings.local.json
+CLAUDE.local.md

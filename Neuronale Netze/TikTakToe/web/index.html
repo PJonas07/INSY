@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tic-Tac-Toe Netz</title>
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --surface: #F2F2F7;
+    --text: #1C1C1E;
+    --text-muted: #6C6C70;
+    --accent: #0A64D8;
+    --on-accent: #FFFFFF;
+    --negative: #B35000;
+    --highlight: #D70015;
+    --border: #D1D1D6;
+    --space-xs: 4px; --space-s: 8px; --space-m: 16px; --space-l: 24px; --space-xl: 32px;
+    --radius-s: 6px; --radius-m: 10px; --radius-l: 16px;
+    --duration-fast: 150ms;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1C1C1E; --surface: #2C2C2E; --text: #F2F2F7; --text-muted: #AEAEB2;
+      --accent: #409CFF; --on-accent: #000000; --negative: #FF9F0A;
+      --highlight: #FF6961; --border: #48484A;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: var(--space-l) var(--space-m); }
+  h1 { font-size: 32px; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 var(--space-s); }
+  h2 { font-size: 16px; line-height: 1.2; margin: 0 0 var(--space-s); font-weight: 600; }
+  p { margin: 0; }
+  .lead { color: var(--text-muted); max-width: 70ch; margin: 0 0 var(--space-l); }
+  .muted { color: var(--text-muted); font-size: 14px; }
+  .layout { display: grid; gap: var(--space-l); grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1000px) {
+    .layout { grid-template-columns: 300px minmax(0, 1fr) 280px; align-items: start; }
+  }
+  .card { background: var(--surface); border-radius: var(--radius-l); padding: var(--space-m); }
+  .stack > * + * { margin-top: var(--space-m); }
+  svg { display: block; width: 100%; height: auto; }
+
+  button, select {
+    min-height: 44px; min-width: 44px; padding: 0 var(--space-m);
+    font: inherit; font-size: 14px; color: var(--text); background: var(--bg);
+    border: 1px solid var(--border); border-radius: var(--radius-m); cursor: pointer;
+    transition: border-color var(--duration-fast), transform var(--duration-fast);
+  }
+  button:hover, select:hover { border-color: var(--text-muted); }
+  button:active { transform: scale(0.97); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-s) var(--space-m); }
+  .check { display: flex; align-items: center; gap: var(--space-s); min-height: 44px; font-size: 14px; cursor: pointer; }
+  .check input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+  fieldset { border: 0; padding: 0; margin: 0; }
+  legend { padding: 0; font-size: 14px; color: var(--text-muted); }
+
+  /* board */
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-s); }
+  .cell {
+    position: relative; aspect-ratio: 1; padding: 0; border-radius: var(--radius-m);
+    font-variant-numeric: tabular-nums;
+  }
+  .cell-index { position: absolute; top: var(--space-xs); left: var(--space-s); font-size: 12px; color: var(--text-muted); }
+  .cell-mark { font-size: 40px; line-height: 1; font-weight: 700; }
+  .cell-value { font-size: 14px; }
+  .cell.suggested { border: 3px solid var(--accent); font-weight: 600; }
+  .cell.win { border: 3px solid var(--highlight); }
+  .cell:disabled { cursor: default; color: var(--text); opacity: 1; }
+  .cell:disabled:active { transform: none; }
+
+  /* training controls */
+  .slider-row { display: grid; grid-template-columns: 1fr; gap: var(--space-xs); flex: 1 1 240px; }
+  input[type="range"] { width: 100%; min-height: 44px; margin: 0; accent-color: var(--accent); }
+
+  /* network graph */
+  .edge { transition: stroke var(--duration-fast), stroke-width var(--duration-fast), opacity var(--duration-fast); }
+  .node circle { stroke: var(--text-muted); stroke-width: 1; }
+  .node.clickable circle { cursor: pointer; }
+  .node.selected circle { stroke: var(--highlight); stroke-width: 3; }
+  .node text { font-size: 10px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .label { font-size: 12px; fill: var(--text); dominant-baseline: central; }
+  .column-title { font-size: 12px; fill: var(--text-muted); text-anchor: middle; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-m); font-size: 12px; color: var(--text-muted); }
+  .legend svg { display: inline-block; width: 28px; height: 8px; vertical-align: middle; margin-right: var(--space-xs); }
+  .calc {
+    font: 13px/1.5 Menlo, ui-monospace, monospace; background: var(--bg);
+    border-radius: var(--radius-m); padding: var(--space-s) var(--space-m);
+    margin: 0; white-space: pre-wrap; word-break: break-word; min-height: 5.5em;
+  }
+
+  /* numbers + charts */
+  .stats { display: grid; grid-template-columns: 1fr auto; gap: var(--space-xs) var(--space-m); margin: 0; font-size: 14px; }
+  .stats dt { color: var(--text-muted); }
+  .stats dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .axis { stroke: var(--border); fill: none; }
+  .axis-label { font-size: 12px; fill: var(--text-muted); }
+  .chart-line { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .chart-marker { stroke: var(--highlight); stroke-width: 1.5; }
+  .chart-dot { fill: var(--highlight); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { padding: var(--space-xs) 0; text-align: right; font-weight: 400; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--text-muted); font-size: 12px; }
+
+  .error { border: 1px solid var(--highlight); margin-bottom: var(--space-l); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tic-Tac-Toe mit einem neuronalen Netz</h1>
+  <p class="lead">
+    Ein neuronales Netz bekommt das Spielfeld und sagt für jedes Feld, wie gut ein Zug dort ist.
+    Gelernt hat es das von einem perfekten Lehrer (Minimax). Spiele gegen das Netz und schiebe den
+    Regler, um zu sehen, wie sich die Gewichte beim Training verändert haben.
+  </p>
+
+  <div id="error" class="card error" hidden>
+    <h2 id="error-title"></h2>
+    <p id="error-text"></p>
+  </div>
+
+  <div class="layout" id="app">
+    <section class="card stack" aria-labelledby="game-title">
+      <h2 id="game-title">Spiel</h2>
+      <p id="status" aria-live="polite"></p>
+      <div class="board" id="board" role="group" aria-label="Spielfeld"></div>
+      <div class="controls">
+        <button type="button" class="primary" id="new-game">Neues Spiel</button>
+        <label class="check"><input type="checkbox" id="network-starts">Netz beginnt</label>
+      </div>
+      <p class="muted">
+        Die Zahl in einem leeren Feld ist die Ausgabe des Netzes für den Spieler, der am Zug ist.
+        Das Feld mit der höchsten Zahl ist dick umrandet.
+      </p>
+    </section>
+
+    <section class="card stack" aria-labelledby="network-title">
+      <h2 id="network-title">Netz</h2>
+      <div class="controls">
+        <button type="button" class="primary" id="play">Training abspielen</button>
+        <div class="slider-row">
+          <label for="snapshot" id="snapshot-label" class="muted"></label>
+          <input type="range" id="snapshot" min="0" step="1">
+        </div>
+      </div>
+      <fieldset>
+        <legend>Kanten zeigen</legend>
+        <div class="controls">
+          <label class="check"><input type="radio" name="edge-mode" value="weight" checked>Gewicht</label>
+          <label class="check"><input type="radio" name="edge-mode" value="change">Änderung seit dem letzten Stand</label>
+        </div>
+      </fieldset>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 28 8"><line x1="0" y1="4" x2="28" y2="4" stroke="var(--accent)" stroke-width="3"/></svg><span id="legend-positive"></span></span>
+        <span><svg viewBox="0 0 28 8"><line x1="0" y1="4" x2="28" y2="4" stroke="var(--negative)" stroke-width="3" stroke-dasharray="4 3"/></svg><span id="legend-negative"></span></span>
+        <span>Liniendicke = Betrag · Knotenfarbe = Aktivierung</span>
+      </div>
+      <svg id="network" viewBox="0 0 560 780" role="img" aria-label="Netzgraph mit 9 Eingabe-, 36 Hidden- und 9 Ausgabe-Neuronen"></svg>
+      <div class="controls">
+        <label for="node-select" class="muted">Rechnung eines Knotens</label>
+        <select id="node-select"></select>
+      </div>
+      <pre class="calc" id="calc" aria-live="polite"></pre>
+      <p class="muted">Eingabe: 1 = Stein des Spielers am Zug, −1 = Stein des Gegners, 0 = leer. Knoten lassen sich auch anklicken.</p>
+    </section>
+
+    <div class="stack">
+      <section class="card stack" aria-labelledby="training-title">
+        <h2 id="training-title">Training</h2>
+        <dl class="stats">
+          <dt>Epoche</dt><dd id="stat-epoch"></dd>
+          <dt>Fehler</dt><dd id="stat-loss"></dd>
+          <dt>Beste Züge getroffen</dt><dd id="stat-rate"></dd>
+          <dt>Mittlere Gewichtsänderung</dt><dd id="stat-change"></dd>
+        </dl>
+        <svg id="loss-chart" viewBox="0 0 260 150" role="img" aria-label="Fehler über die Epochen"></svg>
+        <svg id="rate-chart" viewBox="0 0 260 150" role="img" aria-label="Anteil bester Züge über die Epochen"></svg>
+        <p class="muted" id="training-info"></p>
+      </section>
+      <section class="card stack" aria-labelledby="strength-title">
+        <h2 id="strength-title">Spielstärke nach dem Training</h2>
+        <table>
+          <thead><tr><th scope="col">Netz spielt</th><th scope="col">Siege</th><th scope="col">Remis</th><th scope="col">Niederl.</th></tr></thead>
+          <tbody id="outcomes"></tbody>
+        </table>
+        <p class="muted">Gezählt sind alle Spielverläufe gegen jeden möglichen Gegnerzug.</p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const PLAYER_X = 1;
+const PLAYER_O = -1;
+const EMPTY = 0;
+const SYMBOLS = { [PLAYER_X]: "X", [PLAYER_O]: "O" };
+
+const NETWORK_MOVE_DELAY_MS = 700;   // time to look at the network's outputs before it moves
+const PLAY_DELAY_MS = 250;           // time per snapshot while replaying the training
+const GRAPH_HEIGHT = 780;
+const GRAPH_MARGIN_Y = 34;
+const COLUMN_X = [80, 280, 480];
+const LARGE_NODE_RADIUS = 14;
+const HIDDEN_NODE_RADIUS = 8;
+const MIN_EDGE_WIDTH = 0.3;
+const MAX_EDGE_WIDTH = 3;
+const MIN_EDGE_OPACITY = 0.12;
+const DIMMED_EDGE_OPACITY = 0.04;
+const WEIGHT_CAP = 8;                // weights at or above this value get the thickest line
+const CHANGE_CAP = 0.5;              // same for the change between two snapshots
+const CELL_TINT_PERCENT = 35;        // strongest background tint of a board cell
+const SELF_TEST_TOLERANCE = 1e-6;
+
+const data = window.MODEL_DATA;
+
+// ------------------------------------------------------------------ game rules
+// Same rules as tic_tac_toe/game.py.
+
+function findWinningLine(board) {
+  for (const line of data.winLines) {
+    const [a, b, c] = line;
+    if (board[a] !== EMPTY && board[a] === board[b] && board[b] === board[c]) return line;
+  }
+  return null;
+}
+
+const legalMoves = (board) => board.map((value, cell) => (value === EMPTY ? cell : -1)).filter((cell) => cell >= 0);
+const isGameOver = (board) => findWinningLine(board) !== null || legalMoves(board).length === 0;
+
+// ------------------------------------------------------------------ network math
+// Same calculation as tic_tac_toe/simulation.py: one step per neuron.
+
+const sigmoid = (z) => 1 / (1 + Math.exp(-z));
+
+function layerSteps(layer, inputs, weights, biases) {
+  const steps = [];
+  for (let j = 0; j < biases.length; j++) {
+    const incoming = weights.map((row) => row[j]);
+    const weightedSum = inputs.reduce((sum, x, i) => sum + x * incoming[i], biases[j]);
+    steps.push({ layer, index: j, inputs, weights: incoming, bias: biases[j], weightedSum, activation: sigmoid(weightedSum) });
+  }
+  return steps;
+}
+
+function computeSteps(network, inputs) {
+  const hidden = layerSteps("hidden", inputs, network.weights_hidden, network.bias_hidden);
+  const output = layerSteps("output", hidden.map((s) => s.activation), network.weights_output, network.bias_output);
+  return hidden.concat(output);
+}
+
+// Same as encode_board() in dataset.py: the board from the view of the player to move.
+const encodeBoard = (board, player) => board.map((value) => (value === EMPTY ? 0 : value * player));
+
+// Same as choose_move() in evaluation.py: the empty cell with the highest output.
+function chooseMove(board, outputs) {
+  const moves = legalMoves(board);
+  return moves.reduce((best, cell) => (outputs[cell] > outputs[best] ? cell : best), moves[0]);
+}
+
+const signed = (n) => (n < 0 ? `(${n.toFixed(2)})` : n.toFixed(2));
+const withSign = (n) => (n < 0 ? "−" : "+") + Math.abs(n).toFixed(2);
+
+function formula(step) {
+  const name = (step.layer === "hidden" ? "h" : "y") + step.index;
+  const terms = step.weights.map((w, i) => `${signed(w)}·${step.inputs[i].toFixed(2)}`).join(" + ");
+  return `${name} = σ(${terms} + ${signed(step.bias)})\n   = σ(${step.weightedSum.toFixed(2)}) = ${step.activation.toFixed(3)}`;
+}
+
+// ------------------------------------------------------------------ state
+
+const snapshots = data ? data.snapshots : [];
+const hiddenSize = data ? snapshots[0].network.bias_hidden.length : 0;
+const state = {
+  board: Array(9).fill(EMPTY),
+  player: PLAYER_X,          // whose turn it is
+  human: PLAYER_X,
+  snapshotIndex: Math.max(0, snapshots.length - 1),
+  edgeMode: "weight",
+  selected: null,            // index into steps, or null
+  steps: [],
+  moveTimer: null,
+  playTimer: null,
+};
+const elements = { cells: [], hiddenEdges: [], outputEdges: [], inputNodes: [], stepNodes: [] };
+
+const currentNetwork = () => snapshots[state.snapshotIndex].network;
+const previousNetwork = () => (state.snapshotIndex > 0 ? snapshots[state.snapshotIndex - 1].network : null);
+const outputValues = () => state.steps.slice(hiddenSize).map((step) => step.activation);
+
+function svg(tag, attrs, parent) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
+  if (parent) parent.appendChild(el);
+  return el;
+}
+
+// ------------------------------------------------------------------ board
+
+function buildBoard() {
+  const root = document.getElementById("board");
+  for (let cell = 0; cell < 9; cell++) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "cell";
+    button.addEventListener("click", () => humanMove(cell));
+    root.appendChild(button);
+    elements.cells.push(button);
+  }
+}
+
+function drawBoard() {
+  const isOver = isGameOver(state.board);
+  const winningLine = findWinningLine(state.board) || [];
+  const outputs = outputValues();
+  const suggested = isOver ? null : chooseMove(state.board, outputs);
+
+  elements.cells.forEach((button, cell) => {
+    const value = state.board[cell];
+    const isEmpty = value === EMPTY;
+    const index = document.createElement("span");
+    index.className = "cell-index";
+    index.textContent = cell;
+    const content = document.createElement("span");
+    let description = `Feld ${cell}: `;
+
+    if (!isEmpty) {
+      content.className = "cell-mark";
+      content.textContent = SYMBOLS[value];
+      description += SYMBOLS[value];
+      button.style.background = "";
+    } else if (isOver) {
+      description += "leer";
+      button.style.background = "";
+    } else {
+      content.className = "cell-value";
+      content.textContent = outputs[cell].toFixed(2);
+      description += `leer, Ausgabe des Netzes ${outputs[cell].toFixed(2)}`;
+      const tint = Math.round(outputs[cell] * CELL_TINT_PERCENT);
+      button.style.background = `color-mix(in srgb, var(--accent) ${tint}%, var(--bg))`;
+    }
+    button.replaceChildren(index, content);
+    button.setAttribute("aria-label", description);
+    button.disabled = !isEmpty || isOver || state.player !== state.human;
+    button.classList.toggle("suggested", cell === suggested);
+    button.classList.toggle("win", winningLine.includes(cell));
+  });
+}
+
+function drawStatus() {
+  const status = document.getElementById("status");
+  const winningLine = findWinningLine(state.board);
+  if (winningLine) {
+    const winner = state.board[winningLine[0]];
+    status.textContent = winner === state.human ? "Du hast gewonnen." : "Das Netz hat gewonnen.";
+  } else if (isGameOver(state.board)) {
+    status.textContent = "Unentschieden.";
+  } else if (state.player === state.human) {
+    const suggested = chooseMove(state.board, outputValues());
+    status.textContent = `Du bist am Zug (${SYMBOLS[state.human]}). Das Netz würde Feld ${suggested} spielen.`;
+  } else {
+    const chosen = chooseMove(state.board, outputValues());
+    status.textContent = `Das Netz ist am Zug (${SYMBOLS[state.player]}) und wählt Feld ${chosen} …`;
+  }
+}
+
+// ------------------------------------------------------------------ network graph
+
+function columnPositions(column, count) {
+  const spacing = (GRAPH_HEIGHT - 2 * GRAPH_MARGIN_Y) / (count - 1);
+  return Array.from({ length: count }, (_, i) => [COLUMN_X[column], GRAPH_MARGIN_Y + i * spacing]);
+}
+
+function buildNode(root, [x, y], radius, hasText, stepIndex) {
+  const group = svg("g", { class: "node" + (stepIndex === null ? "" : " clickable") }, root);
+  const circle = svg("circle", { cx: x, cy: y, r: radius }, group);
+  const title = svg("title", {}, circle);
+  const text = hasText ? svg("text", { x, y }, group) : null;
+  if (stepIndex !== null) circle.addEventListener("click", () => selectNode(stepIndex));
+  return { group, circle, title, text };
+}
+
+// All lines and circles are created once; later only their colours and widths change.
+function buildNetwork() {
+  const root = document.getElementById("network");
+  const inputs = columnPositions(0, 9);
+  const hidden = columnPositions(1, hiddenSize);
+  const outputs = columnPositions(2, 9);
+
+  const edgeLayer = svg("g", {}, root);
+  const buildEdges = (sources, targets) => sources.map(([sx, sy]) =>
+    targets.map(([tx, ty]) => svg("line", { x1: sx, y1: sy, x2: tx, y2: ty, class: "edge" }, edgeLayer)));
+  elements.hiddenEdges = buildEdges(inputs, hidden);
+  elements.outputEdges = buildEdges(hidden, outputs);
+
+  inputs.forEach((pos, i) => {
+    elements.inputNodes.push(buildNode(root, pos, LARGE_NODE_RADIUS, true, null));
+    svg("text", { x: pos[0] - LARGE_NODE_RADIUS - 8, y: pos[1], class: "label", "text-anchor": "end" }, root).textContent = `Feld ${i}`;
+  });
+  hidden.forEach((pos, j) => elements.stepNodes.push(buildNode(root, pos, HIDDEN_NODE_RADIUS, false, j)));
+  outputs.forEach((pos, k) => {
+    elements.stepNodes.push(buildNode(root, pos, LARGE_NODE_RADIUS, true, hiddenSize + k));
+    svg("text", { x: pos[0] + LARGE_NODE_RADIUS + 8, y: pos[1], class: "label" }, root).textContent = `Feld ${k}`;
+  });
+  ["Eingabe", "Hidden", "Ausgabe"].forEach((title, c) => {
+    svg("text", { x: COLUMN_X[c], y: 12, class: "column-title" }, root).textContent = title;
+  });
+
+  const select = document.getElementById("node-select");
+  const addOption = (value, label) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    select.appendChild(option);
+  };
+  addOption("", "keiner ausgewählt");
+  for (let j = 0; j < hiddenSize; j++) addOption(j, `Hidden-Neuron h${j}`);
+  for (let k = 0; k < 9; k++) addOption(hiddenSize + k, `Ausgabe-Neuron y${k} (Feld ${k})`);
+  select.addEventListener("change", () => selectNode(select.value === "" ? null : Number(select.value)));
+}
+
+// Style one line: colour = sign, width and opacity = size of the value compared to the cap.
+function styleEdge(line, value, cap, isDimmed) {
+  if (value === null) {
+    line.setAttribute("stroke", "var(--border)");
+    line.setAttribute("stroke-width", MIN_EDGE_WIDTH);
+    line.setAttribute("opacity", isDimmed ? DIMMED_EDGE_OPACITY : 1);
+    line.removeAttribute("stroke-dasharray");
+    return;
+  }
+  const strength = Math.min(Math.abs(value), cap) / cap;
+  line.setAttribute("stroke", value >= 0 ? "var(--accent)" : "var(--negative)");
+  line.setAttribute("stroke-width", MIN_EDGE_WIDTH + strength * (MAX_EDGE_WIDTH - MIN_EDGE_WIDTH));
+  line.setAttribute("opacity", isDimmed ? DIMMED_EDGE_OPACITY : MIN_EDGE_OPACITY + strength * (1 - MIN_EDGE_OPACITY));
+  // Dashes show the sign a second time, so it does not depend on colour alone.
+  if (value < 0) line.setAttribute("stroke-dasharray", "4 3");
+  else line.removeAttribute("stroke-dasharray");
+}
+
+function drawEdges(lines, weights, previousWeights, targetOffset) {
+  const isChangeMode = state.edgeMode === "change";
+  const cap = isChangeMode ? CHANGE_CAP : WEIGHT_CAP;
+  lines.forEach((row, i) => row.forEach((line, j) => {
+    let value = weights[i][j];
+    if (isChangeMode) value = previousWeights ? weights[i][j] - previousWeights[i][j] : null;
+    const isDimmed = state.selected !== null && state.selected !== targetOffset + j;
+    styleEdge(line, value, cap, isDimmed);
+  }));
+}
+
+function drawNetwork() {
+  const network = currentNetwork();
+  const previous = previousNetwork();
+  drawEdges(elements.hiddenEdges, network.weights_hidden, previous && previous.weights_hidden, 0);
+  drawEdges(elements.outputEdges, network.weights_output, previous && previous.weights_output, hiddenSize);
+
+  const inputs = encodeBoard(state.board, state.player);
+  elements.inputNodes.forEach((node, i) => {
+    const value = inputs[i];
+    const fill = value > 0 ? "var(--accent)" : value < 0 ? "var(--negative)" : "var(--bg)";
+    node.circle.setAttribute("fill", fill);
+    node.text.setAttribute("fill", value === 0 ? "var(--text)" : "var(--on-accent)");
+    node.text.textContent = value < 0 ? "−1" : value;
+  });
+  elements.stepNodes.forEach((node, stepIndex) => {
+    const value = state.steps[stepIndex].activation;
+    node.circle.setAttribute("fill", `color-mix(in srgb, var(--accent) ${Math.round(value * 100)}%, var(--bg))`);
+    node.title.textContent = `Aktivierung ${value.toFixed(3)}`;
+    node.group.classList.toggle("selected", stepIndex === state.selected);
+    if (node.text) {
+      node.text.setAttribute("fill", value > 0.5 ? "var(--on-accent)" : "var(--text)");
+      node.text.textContent = value.toFixed(2);
+    }
+  });
+
+  const isChangeMode = state.edgeMode === "change";
+  document.getElementById("legend-positive").textContent = isChangeMode ? "Gewicht ist gestiegen" : "positives Gewicht";
+  document.getElementById("legend-negative").textContent = isChangeMode ? "Gewicht ist gesunken" : "negatives Gewicht";
+}
+
+function weightChangeText(step) {
+  const previous = previousNetwork();
+  if (!previous) return "Startgewichte (zufällig) – noch keine Änderung.";
+  const isHidden = step.layer === "hidden";
+  const previousWeights = (isHidden ? previous.weights_hidden : previous.weights_output).map((row) => row[step.index]);
+  const previousBias = (isHidden ? previous.bias_hidden : previous.bias_output)[step.index];
+  const changes = step.weights.map((w, i) => withSign(w - previousWeights[i])).join(", ");
+  const previousEpoch = snapshots[state.snapshotIndex - 1].epoch;
+  return `Änderung seit Epoche ${previousEpoch}:\n   Gewichte: ${changes}\n   Bias: ${withSign(step.bias - previousBias)}`;
+}
+
+function drawCalculation() {
+  const calc = document.getElementById("calc");
+  document.getElementById("node-select").value = state.selected === null ? "" : state.selected;
+  if (state.selected === null) {
+    calc.textContent = "Jeder Knoten rechnet: gewichtete Summe seiner Eingänge + Bias,\n"
+      + "danach die Sigmoid-Funktion σ(z) = 1 / (1 + e^−z).\n"
+      + "Wähle einen Knoten, um seine Rechnung und die Änderung seiner Gewichte zu sehen.";
+    return;
+  }
+  const step = state.steps[state.selected];
+  calc.textContent = `${formula(step)}\n\n${weightChangeText(step)}`;
+}
+
+// ------------------------------------------------------------------ training numbers + charts
+
+function meanWeightChange() {
+  const previous = previousNetwork();
+  if (!previous) return null;
+  const network = currentNetwork();
+  let sum = 0;
+  let count = 0;
+  for (const name of ["weights_hidden", "weights_output"]) {
+    network[name].forEach((row, i) => row.forEach((w, j) => {
+      sum += Math.abs(w - previous[name][i][j]);
+      count += 1;
+    }));
+  }
+  return sum / count;
+}
+
+const formatPercent = (rate) => `${(rate * 100).toFixed(1).replace(".", ",")} %`;
+const formatNumber = (number, digits) => number.toFixed(digits).replace(".", ",");
+
+function drawChart(id, values, maxValue, topLabel, title) {
+  const root = document.getElementById(id);
+  root.replaceChildren();
+  const left = 44, top = 24, right = 248, bottom = 122;
+  const label = (x, y, text, anchor) => { svg("text", { x, y, class: "axis-label", "text-anchor": anchor }, root).textContent = text; };
+  const pointX = (i) => left + (i / (values.length - 1)) * (right - left);
+  const pointY = (value) => bottom - (value / maxValue) * (bottom - top);
+
+  label(left, 12, title, "start");
+  svg("polyline", { points: `${left},${top} ${left},${bottom} ${right},${bottom}`, class: "axis" }, root);
+  label(left - 4, top + 4, topLabel, "end");
+  label(left - 4, bottom, "0", "end");
+  label(left, bottom + 14, "0", "start");
+  label(right, bottom + 14, snapshots[snapshots.length - 1].epoch, "end");
+  label((left + right) / 2, bottom + 26, "Epoche", "middle");
+  svg("polyline", { points: values.map((value, i) => `${pointX(i)},${pointY(value)}`).join(" "), class: "chart-line" }, root);
+
+  const markerX = pointX(state.snapshotIndex);
+  svg("line", { x1: markerX, y1: top, x2: markerX, y2: bottom, class: "chart-marker" }, root);
+  svg("circle", { cx: markerX, cy: pointY(values[state.snapshotIndex]), r: 4, class: "chart-dot" }, root);
+}
+
+function drawTraining() {
+  const snapshot = snapshots[state.snapshotIndex];
+  const lastEpoch = snapshots[snapshots.length - 1].epoch;
+  const change = meanWeightChange();
+  document.getElementById("snapshot").value = state.snapshotIndex;
+  document.getElementById("snapshot-label").textContent = `Trainingsstand: Epoche ${snapshot.epoch} von ${lastEpoch}`;
+  document.getElementById("stat-epoch").textContent = snapshot.epoch;
+  document.getElementById("stat-loss").textContent = formatNumber(snapshot.loss, 4);
+  document.getElementById("stat-rate").textContent = formatPercent(snapshot.bestMoveRate);
+  document.getElementById("stat-change").textContent = change === null ? "–" : formatNumber(change, 4);
+
+  const losses = snapshots.map((s) => s.loss);
+  const maxLoss = Math.max(...losses);
+  drawChart("loss-chart", losses, maxLoss, formatNumber(maxLoss, 2), "Fehler");
+  drawChart("rate-chart", snapshots.map((s) => s.bestMoveRate), 1, "100 %", "Beste Züge getroffen");
+}
+
+function drawStaticInfo() {
+  const step = snapshots.length > 1 ? snapshots[1].epoch - snapshots[0].epoch : 0;
+  document.getElementById("training-info").textContent =
+    `${data.sampleCount} Stellungen · Lernrate ${data.learningRate} · ein Stand alle ${step} Epochen. `
+    + "Die rote Linie zeigt den gewählten Stand.";
+  const rows = [["X (beginnt)", data.outcomesAsX], ["O (zweiter)", data.outcomesAsO]];
+  const body = document.getElementById("outcomes");
+  for (const [name, outcomes] of rows) {
+    const row = document.createElement("tr");
+    for (const text of [name, outcomes.wins, outcomes.draws, outcomes.losses]) {
+      const cell = document.createElement("td");
+      cell.textContent = text;
+      row.appendChild(cell);
+    }
+    body.appendChild(row);
+  }
+}
+
+// ------------------------------------------------------------------ actions
+
+function render() {
+  state.steps = computeSteps(currentNetwork(), encodeBoard(state.board, state.player));
+  drawBoard();
+  drawStatus();
+  drawNetwork();
+  drawCalculation();
+  drawTraining();
+}
+
+function selectNode(stepIndex) {
+  state.selected = stepIndex === state.selected ? null : stepIndex;
+  render();
+}
+
+function scheduleNetworkMove() {
+  clearTimeout(state.moveTimer);
+  state.moveTimer = null;
+  if (isGameOver(state.board) || state.player === state.human) return;
+  state.moveTimer = setTimeout(() => placeMark(chooseMove(state.board, outputValues())), NETWORK_MOVE_DELAY_MS);
+}
+
+function placeMark(cell) {
+  state.board[cell] = state.player;
+  state.player = -state.player;
+  render();
+  scheduleNetworkMove();
+}
+
+function humanMove(cell) {
+  if (isGameOver(state.board) || state.player !== state.human || state.board[cell] !== EMPTY) return;
+  placeMark(cell);
+}
+
+function newGame() {
+  state.board = Array(9).fill(EMPTY);
+  state.player = PLAYER_X;
+  state.human = document.getElementById("network-starts").checked ? PLAYER_O : PLAYER_X;
+  render();
+  scheduleNetworkMove();
+}
+
+function showSnapshot(index) {
+  state.snapshotIndex = index;
+  render();
+}
+
+function stopPlaying() {
+  clearTimeout(state.playTimer);
+  state.playTimer = null;
+  document.getElementById("play").textContent = "Training abspielen";
+}
+
+function playNext() {
+  if (state.snapshotIndex >= snapshots.length - 1) { stopPlaying(); return; }
+  showSnapshot(state.snapshotIndex + 1);
+  state.playTimer = setTimeout(playNext, PLAY_DELAY_MS);
+}
+
+function togglePlaying() {
+  if (state.playTimer !== null) { stopPlaying(); return; }
+  document.getElementById("play").textContent = "Anhalten";
+  if (state.snapshotIndex >= snapshots.length - 1) showSnapshot(0);
+  state.playTimer = setTimeout(playNext, PLAY_DELAY_MS);
+}
+
+// ------------------------------------------------------------------ start
+
+function showError(title, text) {
+  document.getElementById("error-title").textContent = title;
+  document.getElementById("error-text").textContent = text;
+  document.getElementById("error").hidden = false;
+}
+
+// Python calculated one example; if JavaScript gets another result, the page would show wrong numbers.
+function passesSelfTest() {
+  const check = data.forwardCheck;
+  const steps = computeSteps(snapshots[snapshots.length - 1].network, check.inputs);
+  const outputs = steps.slice(hiddenSize).map((step) => step.activation);
+  return outputs.every((value, i) => Math.abs(value - check.outputs[i]) < SELF_TEST_TOLERANCE);
+}
+
+function init() {
+  if (!data) {
+    showError("Keine Modelldaten gefunden",
+      "Die Datei web/data.js fehlt. Im Projektordner „python -m tic_tac_toe.train“ ausführen und die Seite neu laden.");
+    document.getElementById("app").hidden = true;
+    return;
+  }
+  if (!passesSelfTest()) {
+    showError("Rechnung stimmt nicht mit Python überein",
+      "Die Seite rechnet anders als das Python-Programm. Bitte „python -m tic_tac_toe.train“ erneut ausführen und die Seite neu laden.");
+  }
+  buildBoard();
+  buildNetwork();
+  drawStaticInfo();
+  const slider = document.getElementById("snapshot");
+  slider.max = snapshots.length - 1;
+  slider.addEventListener("input", () => { stopPlaying(); showSnapshot(Number(slider.value)); });
+  document.getElementById("play").addEventListener("click", togglePlaying);
+  document.getElementById("new-game").addEventListener("click", newGame);
+  document.getElementById("network-starts").addEventListener("change", newGame);
+  document.querySelectorAll('input[name="edge-mode"]').forEach((radio) => {
+    radio.addEventListener("change", () => { state.edgeMode = radio.value; render(); });
+  });
+  newGame();
+}
+
+init();
+</script>
+</body>
+</html>

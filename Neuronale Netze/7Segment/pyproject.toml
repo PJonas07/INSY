@@ -1,0 +1,17 @@
+[project]
+name = "seven-segment"
+version = "1.0.0"
+description = "Neural network that recognises digits on a 7-segment display"
+requires-python = ">=3.12"
+dependencies = ["numpy==2.5.3"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7-Segment Netz</title>
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --surface: #F2F2F7;
+    --text: #1C1C1E;
+    --text-muted: #6C6C70;
+    --accent: #0A64D8;
+    --on-accent: #FFFFFF;
+    --negative: #C85A00;
+    --highlight: #D70015;
+    --border: #D1D1D6;
+    --space-xs: 4px; --space-s: 8px; --space-m: 16px; --space-l: 24px; --space-xl: 32px;
+    --radius-m: 10px; --radius-l: 16px;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1C1C1E; --surface: #2C2C2E; --text: #F2F2F7; --text-muted: #AEAEB2;
+      --accent: #409CFF; --on-accent: #000000; --negative: #FF9F0A;
+      --highlight: #FF6961; --border: #48484A;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1200px; margin: 0 auto; padding: var(--space-l) var(--space-m); }
+  h1 { font-size: 32px; line-height: 1.2; margin: 0 0 var(--space-s); }
+  h2 { font-size: 16px; line-height: 1.2; margin: 0 0 var(--space-s); font-weight: 600; }
+  .lead { color: var(--text-muted); max-width: 70ch; margin: 0 0 var(--space-l); }
+  .muted { color: var(--text-muted); font-size: 14px; }
+  .layout {
+    display: grid; gap: var(--space-l);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 900px) {
+    .layout { grid-template-columns: 272px minmax(0, 1fr) 260px; }
+  }
+  .card { background: var(--surface); border-radius: var(--radius-l); padding: var(--space-m); }
+  .stack > * + * { margin-top: var(--space-m); }
+  svg { display: block; width: 100%; height: auto; }
+
+  /* 7-segment display */
+  .segment { cursor: pointer; stroke: var(--border); fill: var(--bg); transition: fill 150ms; }
+  .segment.on { fill: var(--highlight); }
+  .segment:focus-visible { outline: none; stroke: var(--accent); stroke-width: 3; }
+  .digits { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-xs); }
+
+  button {
+    min-height: 44px; min-width: 44px; padding: 0 var(--space-m);
+    font: inherit; font-size: 14px; color: var(--text); background: var(--bg);
+    border: 1px solid var(--border); border-radius: var(--radius-m); cursor: pointer;
+  }
+  button:hover { border-color: var(--text-muted); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .digits button { padding: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: var(--space-s); }
+
+  /* network graph */
+  .edge { transition: stroke 150ms, stroke-width 150ms; }
+  .node circle { stroke: var(--text-muted); stroke-width: 1; cursor: pointer; }
+  .node.pending circle { fill: var(--bg); stroke-dasharray: 2 2; }
+  .node.current circle { stroke: var(--highlight); stroke-width: 3; }
+  .node text { font-size: 9px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .label { font-size: 14px; fill: var(--text); dominant-baseline: central; }
+  .column-title { font-size: 12px; fill: var(--text-muted); text-anchor: middle; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-m); font-size: 12px; color: var(--text-muted); }
+  .legend svg { display: inline-block; width: 28px; height: 8px; vertical-align: middle; margin-right: var(--space-xs); }
+
+  .calc {
+    font: 13px/1.5 Menlo, ui-monospace, monospace; background: var(--bg);
+    border-radius: var(--radius-m); padding: var(--space-s) var(--space-m);
+    margin: 0; white-space: pre-wrap; word-break: break-word; min-height: 5.5em;
+  }
+
+  /* outputs */
+  .bars { display: grid; gap: var(--space-xs); font-variant-numeric: tabular-nums; }
+  .bar-row { display: grid; grid-template-columns: 16px 1fr 40px; align-items: center; gap: var(--space-s); font-size: 14px; }
+  .bar-track { height: 16px; }
+  .bar { height: 100%; background: var(--text-muted); border-radius: 4px; transition: width 150ms; }
+  .bar-row.winner .bar { background: var(--accent); }
+  .bar-row.winner { font-weight: 600; }
+  .result { display: flex; align-items: baseline; gap: var(--space-s); }
+  .result strong { font-size: 40px; line-height: 1.2; color: var(--accent); }
+  .axis { stroke: var(--border); }
+  .axis-label { font-size: 12px; fill: var(--text-muted); }
+  .loss-line { fill: none; stroke: var(--accent); stroke-width: 2; }
+
+  .error { border: 1px solid var(--highlight); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>7-Segment-Erkennung</h1>
+  <p class="lead">
+    Ein neuronales Netz (7 → 8 → 10 Neuronen) erkennt, welche Ziffer eine 7-Segment-Anzeige zeigt.
+    Schalte Segmente ein und aus und verfolge Schritt für Schritt, wie jeder Knoten seinen Wert berechnet.
+  </p>
+
+  <div id="error" class="card error" hidden>
+    <h2>Keine Modelldaten gefunden</h2>
+    <p>Die Datei <code>web/data.js</code> fehlt. Im Projektordner <code>python -m seven_segment.train</code> ausführen und die Seite neu laden.</p>
+  </div>
+
+  <div class="layout" id="app">
+    <section class="card stack" aria-labelledby="display-title">
+      <h2 id="display-title">Eingabe</h2>
+      <p class="muted">Segmente anklicken oder Tasten a–g</p>
+      <svg id="display" viewBox="0 0 160 240" role="group" aria-label="7-Segment-Anzeige" style="max-width:160px;margin-inline:auto"></svg>
+      <p class="muted">Ziffer laden (Tasten 0–9)</p>
+      <div class="digits" id="digits"></div>
+      <button type="button" id="clear" style="width:100%">Alle aus</button>
+    </section>
+
+    <section class="card stack" aria-labelledby="network-title">
+      <h2 id="network-title">Netz – Berechnung im Hintergrund</h2>
+      <div class="legend" aria-hidden="true">
+        <span><svg viewBox="0 0 28 8"><line x1="0" y1="4" x2="28" y2="4" stroke="var(--accent)" stroke-width="3"/></svg>positives Gewicht</span>
+        <span><svg viewBox="0 0 28 8"><line x1="0" y1="4" x2="28" y2="4" stroke="var(--negative)" stroke-width="3" stroke-dasharray="4 3"/></svg>negatives Gewicht</span>
+        <span>Liniendicke = Betrag · Knotenfarbe = Aktivierung</span>
+      </div>
+      <svg id="network" viewBox="0 0 560 440" role="img" aria-label="Netzgraph mit Eingabe-, Hidden- und Ausgabe-Neuronen"></svg>
+      <div class="controls">
+        <button type="button" class="primary" id="step">Nächster Schritt</button>
+        <button type="button" id="animate">Animation abspielen</button>
+        <button type="button" id="reveal">Sofort berechnen</button>
+      </div>
+      <p id="step-title" aria-live="polite" style="margin:0"></p>
+      <pre class="calc" id="calc"></pre>
+      <p class="muted" style="margin:0">Tipp: Einen berechneten Knoten anklicken, um seine Rechnung zu sehen.</p>
+    </section>
+
+    <div class="stack">
+      <section class="card stack" aria-labelledby="output-title">
+        <h2 id="output-title">Ausgabe-Neuronen</h2>
+        <div class="bars" id="bars"></div>
+        <div class="result"><span>Erkannt:</span><strong id="result" aria-live="polite">?</strong></div>
+      </section>
+      <section class="card stack" aria-labelledby="loss-title">
+        <h2 id="loss-title">Fehler beim Training</h2>
+        <svg id="loss" viewBox="0 0 260 160" role="img" aria-label="Fehlerkurve über die Epochen"></svg>
+        <p class="muted" id="loss-info" style="margin:0"></p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const ANIMATION_DELAY_MS = 350;
+const NODE_RADIUS = 15;
+const COLUMN_X = [70, 280, 490];
+const MARGIN_Y = 30;
+const MAX_EDGE_WIDTH = 4;
+const EDGE_WEIGHT_CAP = 6;
+const SEGMENT = { left: 30, top: 20, length: 100, thickness: 16, gap: 4 };
+
+const data = window.MODEL_DATA;
+
+// ------------------------------------------------------------------ network math
+// Same calculation as seven_segment/simulation.py: one step per neuron.
+
+const sigmoid = (z) => 1 / (1 + Math.exp(-z));
+
+function layerSteps(layer, inputs, weights, biases) {
+  const steps = [];
+  for (let j = 0; j < biases.length; j++) {
+    const incoming = weights.map((row) => row[j]);
+    const weightedSum = inputs.reduce((sum, x, i) => sum + x * incoming[i], biases[j]);
+    steps.push({ layer, index: j, inputs, weights: incoming, bias: biases[j], weightedSum, activation: sigmoid(weightedSum) });
+  }
+  return steps;
+}
+
+function computeSteps(segments) {
+  const net = data.network;
+  const hidden = layerSteps("hidden", segments, net.weights_hidden, net.bias_hidden);
+  const output = layerSteps("output", hidden.map((s) => s.activation), net.weights_output, net.bias_output);
+  return hidden.concat(output);
+}
+
+const signed = (n) => (n < 0 ? `(${n.toFixed(2)})` : n.toFixed(2));
+
+function formula(step) {
+  const name = (step.layer === "hidden" ? "h" : "y") + step.index;
+  const terms = step.weights.map((w, i) => `${signed(w)}·${step.inputs[i].toFixed(2)}`).join(" + ");
+  return `${name} = σ(${terms} + ${signed(step.bias)})\n   = σ(${step.weightedSum.toFixed(2)}) = ${step.activation.toFixed(3)}`;
+}
+
+// ------------------------------------------------------------------ state
+
+const hiddenSize = data ? data.network.bias_hidden.length : 0;
+const state = { segments: data ? [...data.segmentTable[8]] : [], steps: [], revealed: 0, selected: null, timer: null };
+
+function svg(tag, attrs, parent) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(attrs)) el.setAttribute(key, value);
+  if (parent) parent.appendChild(el);
+  return el;
+}
+
+// ------------------------------------------------------------------ 7-segment display
+
+function segmentPolygons() {
+  const { left: x0, top: y0, length: l, thickness: t, gap: g } = SEGMENT;
+  const x1 = x0 + l, y1 = y0 + l, y2 = y0 + 2 * l, h = t / 2;
+  const horizontal = (xs, xe, y) => { xs += g; xe -= g; return [xs, y, xs + h, y - h, xe - h, y - h, xe, y, xe - h, y + h, xs + h, y + h]; };
+  const vertical = (x, ys, ye) => { ys += g; ye -= g; return [x, ys, x + h, ys + h, x + h, ye - h, x, ye, x - h, ye - h, x - h, ys + h]; };
+  return [horizontal(x0, x1, y0), vertical(x1, y0, y1), vertical(x1, y1, y2), horizontal(x0, x1, y2),
+          vertical(x0, y1, y2), vertical(x0, y0, y1), horizontal(x0, x1, y1)];
+}
+
+function buildDisplay() {
+  const display = document.getElementById("display");
+  segmentPolygons().forEach((points, i) => {
+    const polygon = svg("polygon", {
+      points: points.join(" "), class: "segment", tabindex: "0", role: "switch",
+      "aria-label": `Segment ${data.segmentNames[i]}`,
+    }, display);
+    polygon.addEventListener("click", () => toggleSegment(i));
+    polygon.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSegment(i); }
+    });
+  });
+  const digits = document.getElementById("digits");
+  for (let d = 0; d < 10; d++) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = d;
+    button.setAttribute("aria-label", `Ziffer ${d} laden`);
+    button.addEventListener("click", () => loadDigit(d));
+    digits.appendChild(button);
+  }
+}
+
+function drawDisplay() {
+  document.querySelectorAll(".segment").forEach((el, i) => {
+    el.classList.toggle("on", state.segments[i] === 1);
+    el.setAttribute("aria-checked", state.segments[i] === 1);
+  });
+}
+
+// ------------------------------------------------------------------ network graph
+
+function columnPositions(column, count) {
+  const spacing = (440 - 2 * MARGIN_Y) / (count - 1);
+  return Array.from({ length: count }, (_, i) => [COLUMN_X[column], MARGIN_Y + i * spacing]);
+}
+
+function drawNetwork() {
+  const root = document.getElementById("network");
+  root.replaceChildren();
+  const net = data.network;
+  const inputs = columnPositions(0, net.weights_hidden.length);
+  const hidden = columnPositions(1, hiddenSize);
+  const outputs = columnPositions(2, net.bias_output.length);
+  const isStepping = state.revealed < state.steps.length;
+  const current = isStepping ? state.revealed - 1 : null;
+
+  const edgeLayer = svg("g", {}, root);
+  const drawEdges = (weights, sources, targets, offset) => {
+    targets.forEach(([tx, ty], j) => {
+      const stepIndex = offset + j;
+      const isActive = isStepping ? stepIndex === current : stepIndex < state.revealed;
+      sources.forEach(([sx, sy], i) => {
+        const w = weights[i][j];
+        const attrs = { x1: sx, y1: sy, x2: tx, y2: ty, class: "edge" };
+        if (isActive) {
+          attrs.stroke = w >= 0 ? "var(--accent)" : "var(--negative)";
+          attrs["stroke-width"] = 0.5 + (Math.min(Math.abs(w), EDGE_WEIGHT_CAP) / EDGE_WEIGHT_CAP) * (MAX_EDGE_WIDTH - 0.5);
+          if (w < 0) attrs["stroke-dasharray"] = "4 3";  // sign not shown by colour alone
+        } else {
+          attrs.stroke = "var(--border)";
+          attrs["stroke-width"] = 1;
+        }
+        svg("line", attrs, edgeLayer);
+      });
+    });
+  };
+  drawEdges(net.weights_hidden, inputs, hidden, 0);
+  drawEdges(net.weights_output, hidden, outputs, hiddenSize);
+
+  const drawNode = ([x, y], value, isCurrent, stepIndex) => {
+    const group = svg("g", { class: "node" + (value === null ? " pending" : "") + (isCurrent ? " current" : "") }, root);
+    const circle = svg("circle", { cx: x, cy: y, r: NODE_RADIUS }, group);
+    const text = svg("text", { x, y }, group);
+    if (value === null) {
+      text.textContent = "?";
+      text.setAttribute("fill", "var(--text-muted)");
+      return;
+    }
+    const percent = Math.round(value * 100);
+    circle.setAttribute("fill", `color-mix(in srgb, var(--accent) ${percent}%, var(--bg))`);
+    text.setAttribute("fill", value > 0.5 ? "var(--on-accent)" : "var(--text)");
+    text.textContent = value.toFixed(2);
+    if (stepIndex !== null) {
+      circle.addEventListener("click", () => { state.selected = stepIndex; drawCalculation(); });
+    }
+  };
+
+  inputs.forEach((pos, i) => {
+    drawNode(pos, state.segments[i], false, null);
+    svg("text", { x: pos[0] - NODE_RADIUS - 12, y: pos[1], class: "label", "text-anchor": "end" }, root).textContent = data.segmentNames[i];
+  });
+  hidden.forEach((pos, j) => {
+    const known = j < state.revealed;
+    drawNode(pos, known ? state.steps[j].activation : null, j === current, j);
+  });
+  outputs.forEach((pos, k) => {
+    const stepIndex = hiddenSize + k;
+    const known = stepIndex < state.revealed;
+    drawNode(pos, known ? state.steps[stepIndex].activation : null, stepIndex === current, stepIndex);
+    svg("text", { x: pos[0] + NODE_RADIUS + 12, y: pos[1], class: "label" }, root).textContent = k;
+  });
+  ["Eingabe", "Hidden", "Ausgabe"].forEach((title, c) => {
+    svg("text", { x: COLUMN_X[c], y: 12, class: "column-title" }, root).textContent = title;
+  });
+}
+
+function drawCalculation() {
+  const title = document.getElementById("step-title");
+  const calc = document.getElementById("calc");
+  let stepIndex = state.selected;
+  if (stepIndex === null && state.revealed < state.steps.length) stepIndex = state.revealed - 1;
+
+  if (stepIndex === null || stepIndex < 0) {
+    title.textContent = "Alle Knoten berechnet – „Nächster Schritt“ startet die Einzelschritte.";
+    calc.textContent = "Jeder Knoten rechnet: gewichtete Summe seiner Eingänge + Bias,\n"
+      + "danach die Sigmoid-Funktion σ(z) = 1 / (1 + e^−z).";
+    return;
+  }
+  const step = state.steps[stepIndex];
+  const layer = step.layer === "hidden" ? "Hidden-Neuron" : "Ausgabe-Neuron";
+  const source = step.layer === "hidden" ? "Segmente a–g" : "Hidden-Neuronen h0–h7";
+  title.textContent = `Schritt ${stepIndex + 1} von ${state.steps.length}: ${layer} ${step.index} (Eingänge: ${source})`;
+  calc.textContent = formula(step);
+}
+
+// ------------------------------------------------------------------ outputs + loss chart
+
+function drawOutputs() {
+  const bars = document.getElementById("bars");
+  bars.replaceChildren();
+  const values = state.steps.slice(hiddenSize).map((s, k) => (hiddenSize + k < state.revealed ? s.activation : null));
+  const isComplete = values.every((v) => v !== null);
+  const winner = isComplete ? values.indexOf(Math.max(...values)) : null;
+
+  values.forEach((value, digit) => {
+    const row = document.createElement("div");
+    row.className = "bar-row" + (digit === winner ? " winner" : "");
+    const label = document.createElement("span");
+    label.textContent = digit;
+    const track = document.createElement("div");
+    track.className = "bar-track";
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.width = value === null ? "0" : `${Math.max(1, value * 100)}%`;
+    track.appendChild(bar);
+    const number = document.createElement("span");
+    number.className = "muted";
+    number.textContent = value === null ? "–" : value.toFixed(2);
+    row.append(label, track, number);
+    bars.appendChild(row);
+  });
+  document.getElementById("result").textContent = isComplete ? winner : "?";
+}
+
+function drawLoss() {
+  const root = document.getElementById("loss");
+  const losses = data.lossHistory;
+  const left = 44, top = 12, right = 248, bottom = 136;
+  svg("polyline", { points: `${left},${top} ${left},${bottom} ${right},${bottom}`, class: "axis", fill: "none" }, root);
+  const maxLoss = Math.max(...losses);
+  const totalEpochs = losses.length * data.lossHistoryStep;
+  const label = (x, y, text, anchor) => { svg("text", { x, y, class: "axis-label", "text-anchor": anchor }, root).textContent = text; };
+  label(left - 4, top + 8, maxLoss.toFixed(2), "end");
+  label(left - 4, bottom, "0", "end");
+  label(right, bottom + 14, totalEpochs, "end");
+  label((left + right) / 2, 156, "Epoche", "middle");
+  const points = losses.map((loss, i) =>
+    `${left + (i / (losses.length - 1)) * (right - left)},${bottom - (loss / maxLoss) * (bottom - top)}`);
+  svg("polyline", { points: points.join(" "), class: "loss-line" }, root);
+  document.getElementById("loss-info").textContent =
+    `${totalEpochs} Epochen · Lernrate ${data.learningRate} · End-Fehler ${losses[losses.length - 1].toFixed(4)}`;
+}
+
+// ------------------------------------------------------------------ actions
+
+function render() {
+  drawDisplay();
+  drawNetwork();
+  drawCalculation();
+  drawOutputs();
+}
+
+function stopAnimation() {
+  clearTimeout(state.timer);
+  state.timer = null;
+  document.getElementById("animate").textContent = "Animation abspielen";
+}
+
+function recalculate() {
+  stopAnimation();
+  state.steps = computeSteps(state.segments);
+  state.revealed = state.steps.length;
+  state.selected = null;
+  render();
+}
+
+function toggleSegment(i) { state.segments[i] = 1 - state.segments[i]; recalculate(); }
+function loadDigit(d) { state.segments = [...data.segmentTable[d]]; recalculate(); }
+
+function nextStep() {
+  if (state.revealed >= state.steps.length) state.revealed = 0;
+  state.revealed += 1;
+  state.selected = null;
+  render();
+}
+
+function animate() {
+  nextStep();
+  if (state.revealed >= state.steps.length) { stopAnimation(); return; }
+  state.timer = setTimeout(animate, ANIMATION_DELAY_MS);
+}
+
+function toggleAnimation() {
+  if (state.timer !== null) { stopAnimation(); return; }
+  document.getElementById("animate").textContent = "Animation stoppen";
+  state.revealed = 0;
+  animate();
+}
+
+function revealAll() {
+  stopAnimation();
+  state.revealed = state.steps.length;
+  state.selected = null;
+  render();
+}
+
+function init() {
+  if (!data) {
+    document.getElementById("error").hidden = false;
+    document.getElementById("app").hidden = true;
+    return;
+  }
+  buildDisplay();
+  drawLoss();
+  document.getElementById("clear").addEventListener("click", () => { state.segments = state.segments.map(() => 0); recalculate(); });
+  document.getElementById("step").addEventListener("click", nextStep);
+  document.getElementById("animate").addEventListener("click", toggleAnimation);
+  document.getElementById("reveal").addEventListener("click", revealAll);
+  document.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.target.tagName === "BUTTON") return;
+    const segment = data.segmentNames.indexOf(e.key);
+    if (segment >= 0 && e.target.tagName !== "polygon") toggleSegment(segment);
+    else if (/^[0-9]$/.test(e.key)) loadDigit(Number(e.key));
+  });
+  recalculate();
+}
+
+init();
+</script>
+</body>
+</html>
