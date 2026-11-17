@@ -6,33 +6,33 @@ Kategorie: Schule · Team: <offen> · Stand: 2026-11-17
 <!-- TOKENS:START -->
 ## Tokenverbrauch
 
-_Automatisch aktualisiert · Stand 2026-11-17 16:15 · 8 Sitzung(en) · 13 Prompts · 141 Anfragen an das Modell_
+_Automatisch aktualisiert · Stand 2026-11-17 16:25 · 10 Sitzung(en) · 18 Prompts · 178 Anfragen an das Modell_
 
 | Kennzahl | Tokens | Kosten | Bedeutung |
 |---|---:|---:|---|
-| **Aktueller Kontext** | 114.497 | – | So viel Text liest Claude derzeit pro Anfrage (Verlauf + Regeln + Dateien) |
-| **Neu gelesen** | 511.741 | $ 2,04 | Text, der zum ersten Mal verarbeitet wurde (Prompts, Dateien, Befehlsausgaben) |
-| **Geschrieben** | 149.023 | $ 2,24 | Antworten, Code und Denken von Claude |
-| Wiederholt gelesen (Cache) | 15.694.240 | $ 3,03 | Bisheriger Verlauf, bei jeder Anfrage erneut gelesen – sehr günstig (5–10 % des Input-Preises) |
-| **Gesamt** | 16.355.004 | **$ 7,31** | Token-Summe wird vom Cache dominiert, die Kosten nicht |
+| **Aktueller Kontext** | 334.477 | – | So viel Text liest Claude derzeit pro Anfrage (Verlauf + Regeln + Dateien) |
+| **Neu gelesen** | 631.710 | $ 2,47 | Text, der zum ersten Mal verarbeitet wurde (Prompts, Dateien, Befehlsausgaben) |
+| **Geschrieben** | 195.390 | $ 2,81 | Antworten, Code und Denken von Claude |
+| Wiederholt gelesen (Cache) | 23.305.484 | $ 4,50 | Bisheriger Verlauf, bei jeder Anfrage erneut gelesen – sehr günstig (5–10 % des Input-Preises) |
+| **Gesamt** | 24.132.584 | **$ 9,78** | Token-Summe wird vom Cache dominiert, die Kosten nicht |
 
 _Kosten = API-Listenpreise laut `scripts/prices.json`. Mit einem Claude-Abo (Pro/Max) wird nicht pro Token abgerechnet – dann zeigt der Wert, was die Nutzung über die API kosten würde._
 _Achtung: keine Preise für claude-haiku-5-5 – in `prices.json` ergänzen, sonst sind die Kosten zu niedrig._
 
-### Pro Prompt (letzte 10 von 13)
+### Pro Prompt (letzte 10 von 18)
 
 | Zeit | Prompt | Anfragen | Neu gelesen | Geschrieben | Cache | Kontext danach |
 |---|---|---:|---:|---:|---:|---:|
-| 11-17 15:31 | Radon Data Analysis: Ab 24 8 ist die Wohnrau… | 6 | 12,2 k | 3,9 k | 343,5 k | 63,7 k |
-| 11-17 15:33 | Fenster gekippt. ja die Lüftung macht einen… | 33 | 60,1 k | 24,2 k | 3,25 Mio. | 126,7 k |
-| 11-17 15:37 | Project path: /Users/jonas/Programming/VS Co… | 9 | 31,4 k | 12,2 k | 174,7 k | 31,4 k |
-| 11-17 15:54 | <pasted_content id="f73f"> Allgemein Über Ra… | 30 | 82,3 k | 52,0 k | 5,17 Mio. | 212,0 k |
-| 11-17 15:59 | Read these pages and answer the questions be… | 2 | 43,9 k | 5,4 k | 5,0 k | 43,9 k |
 | 11-17 16:06 | Project path: /Users/jonas/Programming/VS Co… | 12 | 31,2 k | 10,3 k | 258,9 k | 31,2 k |
-| 11-17 16:09 | Website aktualisieren und zusätzlich eine We… | 22 | 65,3 k | 22,7 k | 5,41 Mio. | 277,8 k |
+| 11-17 16:09 | Website aktualisieren und zusätzlich eine We… | 26 | 69,8 k | 24,9 k | 6,53 Mio. | 282,4 k |
 | 11-17 16:10 | From the WHO Handbook on Indoor Radon (2009)… | 3 | 36,0 k | 2,3 k | 10,6 k | 36,0 k |
 | 11-17 16:10 | Fetch https://www.unscear.org/unscear/upload… | 2 | 2,5 k | 622 | 7,1 k | 5,4 k |
 | 11-17 16:10 | I need national average indoor (residential)… | 3 | 111,7 k | 5,9 k | 89,5 k | 114,5 k |
+| 11-17 16:15 | Project path: /Users/jonas/Programming/VS Co… | 8 | 34,8 k | 9,1 k | 180,4 k | 34,8 k |
+| 11-17 16:20 | Länder einzeichnen. Kondensator formel wegma… | 17 | 46,2 k | 24,9 k | 5,23 Mio. | 330,0 k |
+| 11-17 16:24 | Project path: /Users/jonas/Programming/VS Co… | 5 | 30,9 k | 8,8 k | 88,8 k | 30,9 k |
+| 11-17 16:24 | commiten und pushen | 3 | 3,5 k | 1,4 k | 995,3 k | 334,5 k |
+| 11-17 16:25 | PR nach main anlegen; Mache dann eine Einsch… | 0 | 0 | 0 | 0 | 0 |
 <!-- TOKENS:END -->
 
 <!-- Dauerhafte Doku. Beschreibt den aktuellen Zustand, wird nach jeder Änderung aktualisiert. Verlauf steht in ~/Programming/Doku/. -->
@@ -44,11 +44,11 @@ _Achtung: keine Preise für claude-haiku-5-5 – in `prices.json` ergänzen, son
 ## Aktueller Stand
 
 - **Fertig:** Datensatz gesichtet (Struktur, Zeitraum, Auffälligkeiten, Abwesenheiten, Raum-Rangliste, Lüftung – siehe unten).
-- **Fertig:** Website mit Diagrammen (`website/index.html`), Daten dafür aus `scripts/build_site_data.py`, 26 Tests. Linien lassen sich über die Legende aus- und einblenden. Tabelle „Raum für Raum“ (Tagesgang, höchster Monat, Stunden über 100) aus `roomProfiles`.
+- **Fertig:** Website mit Diagrammen (`website/index.html`), Daten dafür aus `scripts/build_site_data.py`, 30 Tests (alle Tests in `tests/`). Linien lassen sich über die Legende aus- und einblenden. Tabelle „Raum für Raum“ (Tagesgang, höchster Monat, Stunden über 100) aus `roomProfiles`.
 - **Fertig:** Wohnraumlüftung (ab 24.08.2026) mit Vorher-/Nachher-Vergleich in Daten und Website; Marker „Lüftung an“ und „Fenster gekippt“ im Übersichtsdiagramm.
-- **Fertig:** Radon-Hintergrund ganz oben auf der Website („Radon allgemein“): Risiko 100 gegen 1 000 Bq/m³, Lunge und Kinder, österreichische Grenzwerte mit Geschichte, Quellen. Im Bericht unter Abschnitt 9.
-- **Fertig:** Weltkugel „Radon auf der ganzen Welt“ im Radon-Hintergrund: 41 Länder als Punkte in vier Klassen, Weltmittel 39 Bq/m³, Drehen per Ziehen oder Pfeiltasten, Drehung hält beim Fokus an und entfällt bei „Bewegung reduzieren“, Markierung „Dieses Haus“. Klassen aus Karten abgelesen (siehe Probleme).
-- **Fertig:** Dichte des Hauses per Kondensator-Modell (Abschnitt „Wie dicht ist das Haus?“, Nav „Dichtheit“): Abklingzeit im Urlaub, Eintrag von außen, Winter-Schätzung mit und ohne Lüftung. Modell in `build_site_data.py`, Daten `houseModel` in `data.js`. Im Bericht unter Abschnitt 5.
+- **Fertig:** Radon-Hintergrund ganz oben auf der Website („Radon allgemein“): Risiko 100 gegen 1 000 Bq/m³, Lunge und Kinder, österreichische Grenzwerte als Zeitstrahl 1990–2020, Zerfallstabelle und Quellen eingeklappt (`<details>`), zweispaltige Layouts. Im Bericht unter Abschnitt 9.
+- **Fertig:** Weltkugel „Radon auf der ganzen Welt“ im Radon-Hintergrund: Länder als gefüllte Umrisse (177 Länder aus Natural Earth 1:110m, `world.js`), in vier Klassen eingefärbt, Länder ohne Wert grau. Weltmittel 39 Bq/m³, Drehen per Ziehen oder Pfeiltasten, Drehung hält beim Fokus an und entfällt bei „Bewegung reduzieren“, Markierung „Dieses Haus“. Klassen aus Karten abgelesen (siehe Probleme).
+- **Fertig:** Dichte des Hauses per Kondensator-Modell (Abschnitt „Wie dicht ist das Haus?“): Abklingzeit im Urlaub, Eintrag von außen, Winter-Schätzung mit und ohne Lüftung. Auf der Website nur die Ergebnisse, Formel und Analogietabelle stehen im Bericht unter Abschnitt 5. Modell in `build_site_data.py`, Daten `houseModel` in `data.js`.
 - **In Arbeit:** –
 - **Als Nächstes:** Ziel und Abgabetermin klären, danach Plan für die Analyse.
 
@@ -56,12 +56,12 @@ _Achtung: keine Preise für claude-haiku-5-5 – in `prices.json` ergänzen, son
 
 | Bereich | Zweck | Dateien / Ordner | Schnittstelle nach außen | Detail-Doku | Hängt ab von |
 |---|---|---|---|---|---|
-| Dataset | Rohdaten der Radon-, Raumluft- und Wettermessung | `Dataset/radon_sample_data.csv` | CSV, 29 Spalten, Zeitstempel in Spalte 1 (UTC) und 2 (Europe/Vienna) | – | – |
+| Dataset | Rohdaten der Radon-, Raumluft- und Wettermessung; Ländergrenzen für die Weltkugel | `Dataset/radon_sample_data.csv`, `Dataset/countries-110m.json` (TopoJSON, Natural Earth 1:110m über npm `world-atlas` 2.0.2, gemeinfrei) | CSV, 29 Spalten, Zeitstempel in Spalte 1 (UTC) und 2 (Europe/Vienna); TopoJSON | – | – |
 | Ergebnisse | Ausführlicher Bericht der ersten Datensichtung | `docs/ergebnisse-sichtung.md` | Markdown-Bericht | – | Dataset |
-| Datenaufbereitung | Rechnet alle Kennzahlen (inkl. Lüftungsvergleich, Kondensator-Modell der Hausdichte) und Diagrammdaten aus der CSV | `scripts/build_site_data.py`, `tests/` | schreibt `website/data.js` (`window.RADON_DATA`, u. a. Schlüssel `houseModel`) | – | Dataset |
-| Website | Zeigt die Ergebnisse mit Diagrammen (Radon-Hintergrund mit Weltkugel, Lüftungs- und Dichteabschnitt), rechnet selbst nichts außer der Projektion der Weltkugel | `website/index.html`, `styles.css`, `app.js`, `data.js` (generiert) | im Browser öffnen | – | Datenaufbereitung |
+| Datenaufbereitung | Rechnet alle Kennzahlen (inkl. Lüftungsvergleich, Kondensator-Modell der Hausdichte) und Diagrammdaten aus der CSV; wandelt die Ländergrenzen in Koordinaten um | `scripts/build_site_data.py`, `scripts/build_world_data.py`, `tests/` | schreibt `website/data.js` (`window.RADON_DATA`, u. a. Schlüssel `houseModel`) und `website/world.js` (`window.WORLD_COUNTRIES`, ca. 140 KB) | – | Dataset |
+| Website | Zeigt die Ergebnisse mit Diagrammen (Radon-Hintergrund mit Weltkugel, Lüftungs- und Dichteabschnitt), rechnet selbst nichts außer der Projektion der Weltkugel | `website/index.html`, `styles.css`, `app.js`, `data.js` (generiert), `world.js` (generiert) | im Browser öffnen | – | Datenaufbereitung |
 
-Ablauf: CSV → `build_site_data.py` → `data.js` → `app.js` zeichnet die Diagramme als SVG.
+Ablauf: CSV → `build_site_data.py` → `data.js` → `app.js` zeichnet die Diagramme als SVG. Ländergrenzen: `countries-110m.json` → `build_world_data.py` → `world.js` → `app.js` zeichnet die Länder als SVG-Pfade.
 
 ## Datensatz
 
@@ -90,6 +90,7 @@ Alle Werte aus Stundenmitteln, 0-Werte direkt nach einem Geräte-Neustart entfer
 
 ```bash
 ~/.local/bin/python3.12 scripts/build_site_data.py        # website/data.js neu erzeugen
+~/.local/bin/python3.12 scripts/build_world_data.py       # website/world.js neu erzeugen (aus Dataset/countries-110m.json)
 ~/.local/bin/python3.12 -m unittest discover tests       # Tests
 open website/index.html                                   # Website ansehen
 ```
@@ -110,7 +111,8 @@ Keine Abhängigkeiten: nur Python-Standardbibliothek, im Browser kein Framework 
 | 2026-11-17 | Kondensator-Modell (Gitter-Suche + lineare Regression, nur Standardbibliothek) für Hausdichte | Ein Modell mit wenigen Parametern, mit Tests prüfbar; keine Dependency nötig |
 | 2026-11-17 | Winter-Schätzung über Temperatur-Regression seit 24.08.; Luftwechsel konstant angenommen → Obergrenze | Im Winter gibt es keine geschlossene Phase zum Messen; Konstanz ist eine bewusste Vereinfachung |
 | 2026-11-17 | Hausvolumen 675 m³ laut Hausbesitzer (270 m² × 2,5 m) | Grundfläche und Raumhöhe vom Hausbesitzer, nicht vermessen |
-| 2026-11-17 | Weltkugel als handgeschriebenes SVG (orthografische Projektion), ohne Kartenbibliothek; Länder als Punkte statt Umrisse | Keine Dependency ohne Rücksprache; Punkte brauchen keine Geodaten |
+| 2026-11-17 | Weltkugel als handgeschriebenes SVG (orthografische Projektion), ohne Kartenbibliothek | Keine Dependency ohne Rücksprache; jede Zeile erklärbar |
+| 2026-11-17 | Ländergrenzen als Datendatei statt Bibliothek: Natural Earth 1:110m über npm `world-atlas` 2.0.2, eigener TopoJSON-Decoder in `build_world_data.py`, Ergebnis `world.js` | Keine Kartenbibliothek als Dependency; Daten gemeinfrei; Umwandlung einmalig und mit Tests prüfbar, Browser lädt nur die fertige Datei |
 | 2026-11-17 | Länderwerte als vier Klassen (7–25, 25–50, 50–100, 100–184 Bq/m³) aus den Karten von Zielinski & Chambers 2008 abgelesen, keine exakten Landeswerte; Konstante `COUNTRIES` in `app.js` | Die Quelle liefert Karten, keine Tabelle; Klassen statt Scheingenauigkeit; gleiches Muster wie `REFERENCE_LEVELS` |
 
 ## Bekannte Probleme / Einschränkungen
@@ -125,4 +127,5 @@ Keine Abhängigkeiten: nur Python-Standardbibliothek, im Browser kein Framework 
 - **Hausvolumen** 675 m³ ist eine Angabe des Hausbesitzers, nicht vermessen.
 - **Quellen 400/200 Bq/m³ und Frist 2018** (österreichische Grenzwerte) stammen nur aus Sekundärquellen, nicht aus dem Originaltext.
 - **Länderklassen der Weltkugel** sind aus Karten abgelesen (Zielinski & Chambers 2008, Daten bis 2007), nicht exakt und nicht aktuell. Sie zeigen Größenordnungen, keine Messwerte.
+- **Ländergrenzen** (Natural Earth 1:110m) sind grob und nur für die Übersicht gedacht; Grenzen und Namen entsprechen nicht jeder politischen Sicht.
 - **UNSCEAR-Tabelle** selbst nicht lesbar; das Weltmittel 39 Bq/m³ stammt aus dem Zitat in Zielinski & Chambers (UNSCEAR 2000).

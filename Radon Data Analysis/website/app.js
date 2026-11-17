@@ -666,25 +666,27 @@ const RADON_LEVELS = [
 function levelOf(mean) {
   return RADON_LEVELS.find((level) => mean < level.upperBound);
 }
-// [name, longitude, latitude, index into RADON_LEVELS]; coordinates are rough country centres.
+// [German name, name in world.js, index into RADON_LEVELS].
 const COUNTRIES = [
-  ["Finnland", 26, 64, 3], ["Schweden", 16, 62, 3], ["Tschechien", 15.5, 49.8, 3], ["Mexiko", -102, 23.6, 3],
-  ["Armenien", 45, 40.1, 3],
-  ["Norwegen", 9, 61, 2], ["Frankreich", 2.5, 46.5, 2], ["Spanien", -3.7, 40.2, 2], ["Portugal", -8, 39.6, 2],
-  ["Italien", 12.5, 42.8, 2], ["Irland", -8, 53.2, 2], ["Russland", 95, 60, 2], ["Indien", 79, 22, 2],
-  ["Iran", 53.7, 32.4, 2], ["Brasilien", -52, -10, 2], ["Südkorea", 127.8, 36.3, 2], ["Venezuela", -66.6, 7, 2],
-  ["Ecuador", -78.4, -1.5, 2],
-  ["USA", -98, 39, 1], ["Kanada", -100, 58, 1], ["Deutschland", 10.4, 51, 1], ["Polen", 19.4, 52, 1],
-  ["China", 104, 35, 1], ["Argentinien", -64, -35, 1], ["Peru", -75, -9.5, 1], ["Pakistan", 69, 30, 1],
-  ["Indonesien", 117, -2.5, 1], ["Algerien", 2.6, 28, 1], ["Rumänien", 25, 45.9, 1],
-  ["Großbritannien", -2, 54, 0], ["Niederlande", 5.3, 52.2, 0], ["Island", -18.6, 64.9, 0], ["Australien", 134, -25, 0],
-  ["Neuseeland", 172.5, -41.5, 0], ["Japan", 138, 36.5, 0], ["Ägypten", 30, 26.5, 0], ["Kuba", -79, 21.6, 0],
-  ["Saudi-Arabien", 45, 24, 0], ["Thailand", 101, 15, 0], ["Philippinen", 122, 12, 0], ["Chile", -71, -33, 0],
+  ["Finnland", "Finland", 3], ["Schweden", "Sweden", 3], ["Tschechien", "Czechia", 3], ["Mexiko", "Mexico", 3],
+  ["Armenien", "Armenia", 3],
+  ["Norwegen", "Norway", 2], ["Frankreich", "France", 2], ["Spanien", "Spain", 2], ["Portugal", "Portugal", 2],
+  ["Italien", "Italy", 2], ["Irland", "Ireland", 2], ["Russland", "Russia", 2], ["Indien", "India", 2],
+  ["Iran", "Iran", 2], ["Brasilien", "Brazil", 2], ["Südkorea", "South Korea", 2], ["Venezuela", "Venezuela", 2],
+  ["Ecuador", "Ecuador", 2],
+  ["USA", "United States of America", 1], ["Kanada", "Canada", 1], ["Deutschland", "Germany", 1], ["Polen", "Poland", 1],
+  ["China", "China", 1], ["Argentinien", "Argentina", 1], ["Peru", "Peru", 1], ["Pakistan", "Pakistan", 1],
+  ["Indonesien", "Indonesia", 1], ["Algerien", "Algeria", 1], ["Rumänien", "Romania", 1],
+  ["Großbritannien", "United Kingdom", 0], ["Niederlande", "Netherlands", 0], ["Island", "Iceland", 0],
+  ["Australien", "Australia", 0], ["Neuseeland", "New Zealand", 0], ["Japan", "Japan", 0], ["Ägypten", "Egypt", 0],
+  ["Kuba", "Cuba", 0], ["Saudi-Arabien", "Saudi Arabia", 0], ["Thailand", "Thailand", 0],
+  ["Philippinen", "Philippines", 0], ["Chile", "Chile", 0],
 ];
 const HOUSE_POSITION = { lon: 14, lat: 48 };
 const GLOBE_SIZE = 400;
+const GLOBE_CENTER = GLOBE_SIZE / 2;
 const GLOBE_RADIUS = 190;
-const GLOBE_DOT_RADIUS = 7;
+const GLOBE_DOT_RADIUS = 6;
 const GRID_STEP_DEGREES = 30;
 const GRID_SAMPLE_DEGREES = 3;
 const DRAG_DEGREES_PER_PIXEL = 0.4;
@@ -701,8 +703,8 @@ function projectOnGlobe(lon, lat, view) {
   // cos of the angle between point and view centre; below 0 the point is on the back side.
   const visibility = Math.sin(phi0) * Math.sin(phi) + Math.cos(phi0) * Math.cos(phi) * Math.cos(lambda);
   return {
-    x: GLOBE_SIZE / 2 + GLOBE_RADIUS * Math.cos(phi) * Math.sin(lambda),
-    y: GLOBE_SIZE / 2 - GLOBE_RADIUS * (Math.cos(phi0) * Math.sin(phi) - Math.sin(phi0) * Math.cos(phi) * Math.cos(lambda)),
+    x: GLOBE_CENTER + GLOBE_RADIUS * Math.cos(phi) * Math.sin(lambda),
+    y: GLOBE_CENTER - GLOBE_RADIUS * (Math.cos(phi0) * Math.sin(phi) - Math.sin(phi0) * Math.cos(phi) * Math.cos(lambda)),
     isVisible: visibility > 0,
   };
 }
@@ -738,36 +740,68 @@ function buildGraticule(view) {
   return path;
 }
 
-function drawGlobeDot(svg, position, className, onShow) {
-  const dot = createSvgElement("circle", {
-    class: className, cx: position.x.toFixed(1), cy: position.y.toFixed(1), r: GLOBE_DOT_RADIUS,
-  });
-  dot.addEventListener("pointerenter", (event) => onShow(event.clientX, event.clientY));
-  dot.addEventListener("pointerleave", hideTooltip);
-  svg.append(dot);
+// Filled outline of a country. Points on the back side are pushed out to the edge of the globe,
+// so a country that is half hidden is cut off at the horizon instead of folding over.
+function buildCountryPath(rings, view) {
+  let path = "";
+  for (const ring of rings) {
+    const points = ring.map(([lon, lat]) => projectOnGlobe(lon, lat, view));
+    if (!points.some((point) => point.isVisible)) continue;
+    const parts = points.map((point) => {
+      if (point.isVisible) return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+      const angle = Math.atan2(point.y - GLOBE_CENTER, point.x - GLOBE_CENTER);
+      return `${(GLOBE_CENTER + GLOBE_RADIUS * Math.cos(angle)).toFixed(1)},${(GLOBE_CENTER + GLOBE_RADIUS * Math.sin(angle)).toFixed(1)}`;
+    });
+    path += `M${parts.join("L")}Z`;
+  }
+  return path;
 }
 
-function drawGlobe(container, view, houseMean) {
+// Creates the SVG once; redraw() then only changes the path data, which is fast enough for animation.
+function createGlobe(container, houseMean) {
+  const levelByName = new Map(COUNTRIES.map(([germanName, name, levelIndex]) => [name, { germanName, level: RADON_LEVELS[levelIndex] }]));
   const svg = createSvgElement("svg", { viewBox: `0 0 ${GLOBE_SIZE} ${GLOBE_SIZE}`, "aria-hidden": "true" });
-  svg.append(createSvgElement("circle", { class: "globe-sea", cx: GLOBE_SIZE / 2, cy: GLOBE_SIZE / 2, r: GLOBE_RADIUS }));
-  svg.append(createSvgElement("path", { class: "globe-grid", d: buildGraticule(view) }));
-  for (const [name, lon, lat, levelIndex] of COUNTRIES) {
-    const position = projectOnGlobe(lon, lat, view);
-    if (!position.isVisible) continue;
-    const level = RADON_LEVELS[levelIndex];
-    drawGlobeDot(svg, position, `globe-dot ${level.colorClass}`, (x, y) => showTooltip(name,
-      [{ value: level.range, label: "Landesmittel", colorClass: level.colorClass }], x, y));
-  }
-  const house = projectOnGlobe(HOUSE_POSITION.lon, HOUSE_POSITION.lat, view);
-  if (house.isVisible) {
-    const houseLevel = levelOf(houseMean);
-    drawGlobeDot(svg, house, `globe-dot is-house ${houseLevel.colorClass}`, (x, y) => showTooltip("Dieses Haus",
-      [{ value: `${numberFormat.format(houseMean)} Bq/m³`, label: "Wohnräume im Alltag", colorClass: houseLevel.colorClass }], x, y));
-    const label = createSvgElement("text", { class: "globe-label", x: house.x + GLOBE_DOT_RADIUS + 4, y: house.y + 4 });
-    label.textContent = "Dieses Haus";
-    svg.append(label);
-  }
+  svg.append(createSvgElement("circle", { class: "globe-sea", cx: GLOBE_CENTER, cy: GLOBE_CENTER, r: GLOBE_RADIUS }));
+  const grid = createSvgElement("path", { class: "globe-grid" });
+  svg.append(grid);
+
+  const countries = window.WORLD_COUNTRIES.map((country) => {
+    const entry = levelByName.get(country.name);
+    const element = createSvgElement("path", { class: entry ? `globe-country ${entry.level.colorClass}` : "globe-country is-empty" });
+    element.addEventListener("pointerenter", (event) => {
+      const row = entry
+        ? { value: entry.level.range, label: "Landesmittel", colorClass: entry.level.colorClass }
+        : { value: "keine Angabe", label: "in der Quelle" };
+      showTooltip(entry ? entry.germanName : country.name, [row], event.clientX, event.clientY);
+    });
+    element.addEventListener("pointerleave", hideTooltip);
+    svg.append(element);
+    return { rings: country.rings, element };
+  });
+
+  const houseLevel = levelOf(houseMean);
+  const houseDot = createSvgElement("circle", { class: `globe-dot ${houseLevel.colorClass}`, r: GLOBE_DOT_RADIUS });
+  houseDot.addEventListener("pointerenter", (event) => showTooltip("Dieses Haus",
+    [{ value: `${numberFormat.format(houseMean)} Bq/m³`, label: "Wohnräume im Alltag", colorClass: houseLevel.colorClass }],
+    event.clientX, event.clientY));
+  houseDot.addEventListener("pointerleave", hideTooltip);
+  const houseLabel = createSvgElement("text", { class: "globe-label" });
+  houseLabel.textContent = "Dieses Haus";
+  svg.append(houseDot, houseLabel);
   container.replaceChildren(svg);
+
+  return function redraw(view) {
+    grid.setAttribute("d", buildGraticule(view));
+    for (const country of countries) country.element.setAttribute("d", buildCountryPath(country.rings, view));
+    const house = projectOnGlobe(HOUSE_POSITION.lon, HOUSE_POSITION.lat, view);
+    const visibility = house.isVisible ? "visible" : "hidden";
+    houseDot.setAttribute("visibility", visibility);
+    houseLabel.setAttribute("visibility", visibility);
+    houseDot.setAttribute("cx", house.x.toFixed(1));
+    houseDot.setAttribute("cy", house.y.toFixed(1));
+    houseLabel.setAttribute("x", (house.x + GLOBE_DOT_RADIUS + 4).toFixed(1));
+    houseLabel.setAttribute("y", (house.y + 4).toFixed(1));
+  };
 }
 
 function drawGlobeLevels() {
@@ -777,7 +811,7 @@ function drawGlobeLevels() {
     const level = RADON_LEVELS[index];
     const heading = createHtmlElement("h4", level.colorClass);
     heading.append(createHtmlElement("span", "level-swatch"), createHtmlElement("span", "", level.range));
-    const names = COUNTRIES.filter((country) => country[3] === index).map((country) => country[0]);
+    const names = COUNTRIES.filter((country) => country[2] === index).map((country) => country[0]);
     const item = createHtmlElement("div");
     item.append(heading, createHtmlElement("p", "", names.join(", ")));
     list.append(item);
@@ -787,7 +821,8 @@ function drawGlobeLevels() {
 function setUpGlobe(data) {
   const container = document.getElementById("globe");
   const view = { lon: 15, lat: 25 };
-  const redraw = () => drawGlobe(container, view, data.kpis.everydayLivingMean);
+  const drawView = createGlobe(container, data.kpis.everydayLivingMean);
+  const redraw = () => drawView(view);
   const rotate = (deltaLon, deltaLat) => {
     view.lon = ((view.lon + deltaLon + 540) % 360) - 180;
     view.lat = Math.max(-MAX_TILT_DEGREES, Math.min(MAX_TILT_DEGREES, view.lat + deltaLat));
