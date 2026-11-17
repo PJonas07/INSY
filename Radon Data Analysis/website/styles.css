@@ -206,8 +206,7 @@ button.legend-item[aria-pressed="false"] .legend-label { text-decoration: line-t
 .prose strong { color: var(--text); font-weight: 600; }
 .subsection { margin-top: var(--space-xl); }
 .subsection > .headline { margin-bottom: var(--space-m); }
-.sources { font-size: 14px; }
-.sources a, .prose a { color: var(--accent); }
+.prose a { color: var(--accent); }
 
 /* ------------------------------------------------------------------ tables */
 .table-heading { margin-top: var(--space-xl); }
@@ -271,3 +270,15 @@ summary { display: inline-flex; align-items: center; min-height: 44px; cursor: p
 .timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-m); font-size: 14px; color: var(--text-muted); }
 .timeline li { display: grid; grid-template-columns: 48px 1fr; gap: var(--space-m); }
 .timeline strong { color: var(--text); }
+
+/* ------------------------------------------------------------------ verdict */
+.verdict { background: var(--surface); border-radius: var(--radius-l); padding: var(--space-xl); }
+.verdict-house { color: var(--text-muted); }
+.verdict-answer { font-size: clamp(20px, 3vw, 28px); font-weight: 600; margin-block: var(--space-s) var(--space-l); }
+@media (max-width: 559px) { .verdict { padding: var(--space-l) var(--space-m); } }
+
+/* Sources sit directly under the information they back up, very small. */
+.source { font-size: 11px; line-height: 1.4; color: var(--text-muted); margin-top: var(--space-s); max-width: 80ch; }
+.source a { color: inherit; text-decoration: underline; text-decoration-color: var(--border); }
+.source a:hover { color: var(--accent); }
+@media (min-width: 900px) { .verdict-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

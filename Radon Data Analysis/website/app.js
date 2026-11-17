@@ -328,6 +328,17 @@ function setUpSeriesToggle(legendId, hiddenKeys, redraw) {
   });
 }
 
+// One sentence about this house in the verdict; the numbers come from data.js.
+function drawVerdict(data) {
+  const format = (value) => numberFormat.format(value);
+  const winter = data.houseModel.winter;
+  document.getElementById("verdict-house").textContent =
+    `Kein Problem, solange gelüftet wird: im Alltag ${format(data.kpis.everydayLivingMean)} Bq/m³, mit Lüftung `
+    + `${format(data.ventilation.livingCompare.after)}, im Winter geschätzt rund ${format(winter.ventilatedLiving)}. `
+    + `Ohne Lüftung und mit geschlossenen Fenstern wären es im Winter bis zu ${format(winter.closedEnd)} Bq/m³. `
+    + "Lüftung deshalb dauerhaft laufen lassen und über den Winter weiter messen.";
+}
+
 function drawHero(data) {
   const firstDay = dayFormat.format(parseDay(data.meta.firstDay));
   const lastDay = dayFormat.format(parseDay(data.meta.lastDay));
@@ -898,6 +909,7 @@ function start() {
     return;
   }
   drawHero(data);
+  drawVerdict(data);
   drawRanking(data, "everyday");
   setUpRankingToggle(data);
   drawRoomProfiles(data);
