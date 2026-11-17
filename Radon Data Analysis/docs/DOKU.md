@@ -1,34 +1,38 @@
 # Radon Data Analysis – Dokumentation
 
-Kategorie: <offen – noch nicht geklärt> · Team: <offen> · Stand: 2026-10-13
+Kategorie: Schule · Team: <offen> · Stand: 2026-11-17
 
 <!-- Wird automatisch von ~/Programming/Claude/scripts/token_stats.py gefüllt (Stop-Hook). Nicht von Hand bearbeiten. -->
 <!-- TOKENS:START -->
 ## Tokenverbrauch
 
-_Automatisch aktualisiert · Stand 2026-10-13 16:40 · 1 Sitzung(en) · 7 Prompts · 47 Anfragen an das Modell_
+_Automatisch aktualisiert · Stand 2026-11-17 16:15 · 8 Sitzung(en) · 13 Prompts · 141 Anfragen an das Modell_
 
 | Kennzahl | Tokens | Kosten | Bedeutung |
 |---|---:|---:|---|
-| **Aktueller Kontext** | 289.051 | – | So viel Text liest Claude derzeit pro Anfrage (Verlauf + Regeln + Dateien) |
-| **Neu gelesen** | 217.024 | $ 1,74 | Text, der zum ersten Mal verarbeitet wurde (Prompts, Dateien, Befehlsausgaben) |
-| **Geschrieben** | 105.901 | $ 2,12 | Antworten, Code und Denken von Claude |
-| Wiederholt gelesen (Cache) | 8.190.689 | $ 1,64 | Bisheriger Verlauf, bei jeder Anfrage erneut gelesen – sehr günstig (5–10 % des Input-Preises) |
-| **Gesamt** | 8.513.614 | **$ 5,49** | Token-Summe wird vom Cache dominiert, die Kosten nicht |
+| **Aktueller Kontext** | 114.497 | – | So viel Text liest Claude derzeit pro Anfrage (Verlauf + Regeln + Dateien) |
+| **Neu gelesen** | 511.741 | $ 2,04 | Text, der zum ersten Mal verarbeitet wurde (Prompts, Dateien, Befehlsausgaben) |
+| **Geschrieben** | 149.023 | $ 2,24 | Antworten, Code und Denken von Claude |
+| Wiederholt gelesen (Cache) | 15.694.240 | $ 3,03 | Bisheriger Verlauf, bei jeder Anfrage erneut gelesen – sehr günstig (5–10 % des Input-Preises) |
+| **Gesamt** | 16.355.004 | **$ 7,31** | Token-Summe wird vom Cache dominiert, die Kosten nicht |
 
 _Kosten = API-Listenpreise laut `scripts/prices.json`. Mit einem Claude-Abo (Pro/Max) wird nicht pro Token abgerechnet – dann zeigt der Wert, was die Nutzung über die API kosten würde._
+_Achtung: keine Preise für claude-haiku-5-5 – in `prices.json` ergänzen, sonst sind die Kosten zu niedrig._
 
-### Pro Prompt (letzte 7 von 7)
+### Pro Prompt (letzte 10 von 13)
 
 | Zeit | Prompt | Anfragen | Neu gelesen | Geschrieben | Cache | Kontext danach |
 |---|---|---:|---:|---:|---:|---:|
-| 10-13 16:06 | Neues Projekt: Les dir das Daten set von Rad… | 11 | 43,5 k | 13,0 k | 546,3 k | 68,9 k |
-| 10-13 16:16 | Präsentiere mir das schön in einer htlm webs… | 15 | 89,0 k | 46,5 k | 2,34 Mio. | 204,6 k |
-| 10-13 16:27 | Schreibe Generell dazu. Woher kommt der Refe… | 9 | 57,2 k | 29,3 k | 2,02 Mio. | 261,7 k |
-| 10-13 16:33 | Was kann man gegen Radon im haus machen. Ver… | 3 | 6,9 k | 3,3 k | 794,0 k | 268,6 k |
-| 10-13 16:35 | Was sind die Daten, die die einzelnen Räume… | 3 | 5,5 k | 4,1 k | 812,4 k | 274,1 k |
-| 10-13 16:38 | Gleicher Kontent aber kompakter | 2 | 2,6 k | 1,3 k | 550,2 k | 276,7 k |
-| 10-13 16:39 | in der website | 4 | 12,4 k | 8,3 k | 1,12 Mio. | 289,1 k |
+| 11-17 15:31 | Radon Data Analysis: Ab 24 8 ist die Wohnrau… | 6 | 12,2 k | 3,9 k | 343,5 k | 63,7 k |
+| 11-17 15:33 | Fenster gekippt. ja die Lüftung macht einen… | 33 | 60,1 k | 24,2 k | 3,25 Mio. | 126,7 k |
+| 11-17 15:37 | Project path: /Users/jonas/Programming/VS Co… | 9 | 31,4 k | 12,2 k | 174,7 k | 31,4 k |
+| 11-17 15:54 | <pasted_content id="f73f"> Allgemein Über Ra… | 30 | 82,3 k | 52,0 k | 5,17 Mio. | 212,0 k |
+| 11-17 15:59 | Read these pages and answer the questions be… | 2 | 43,9 k | 5,4 k | 5,0 k | 43,9 k |
+| 11-17 16:06 | Project path: /Users/jonas/Programming/VS Co… | 12 | 31,2 k | 10,3 k | 258,9 k | 31,2 k |
+| 11-17 16:09 | Website aktualisieren und zusätzlich eine We… | 22 | 65,3 k | 22,7 k | 5,41 Mio. | 277,8 k |
+| 11-17 16:10 | From the WHO Handbook on Indoor Radon (2009)… | 3 | 36,0 k | 2,3 k | 10,6 k | 36,0 k |
+| 11-17 16:10 | Fetch https://www.unscear.org/unscear/upload… | 2 | 2,5 k | 622 | 7,1 k | 5,4 k |
+| 11-17 16:10 | I need national average indoor (residential)… | 3 | 111,7 k | 5,9 k | 89,5 k | 114,5 k |
 <!-- TOKENS:END -->
 
 <!-- Dauerhafte Doku. Beschreibt den aktuellen Zustand, wird nach jeder Änderung aktualisiert. Verlauf steht in ~/Programming/Doku/. -->
@@ -40,10 +44,13 @@ _Kosten = API-Listenpreise laut `scripts/prices.json`. Mit einem Claude-Abo (Pro
 ## Aktueller Stand
 
 - **Fertig:** Datensatz gesichtet (Struktur, Zeitraum, Auffälligkeiten, Abwesenheiten, Raum-Rangliste, Lüftung – siehe unten).
-- **Fertig:** Website mit Diagrammen (`website/index.html`), Daten dafür aus `scripts/build_site_data.py`, 17 Tests. Linien lassen sich über die Legende aus- und einblenden. Tabelle „Raum für Raum“ (Tagesgang, höchster Monat, Stunden über 100) aus `roomProfiles`.
-- **Fertig:** Hintergrund zu Radon (Wirkung, Halbwertszeit, Referenzwert, Ländervergleich, Hotspots, Bauweise) auf der Website und im Bericht, mit Quellen.
+- **Fertig:** Website mit Diagrammen (`website/index.html`), Daten dafür aus `scripts/build_site_data.py`, 26 Tests. Linien lassen sich über die Legende aus- und einblenden. Tabelle „Raum für Raum“ (Tagesgang, höchster Monat, Stunden über 100) aus `roomProfiles`.
+- **Fertig:** Wohnraumlüftung (ab 24.08.2026) mit Vorher-/Nachher-Vergleich in Daten und Website; Marker „Lüftung an“ und „Fenster gekippt“ im Übersichtsdiagramm.
+- **Fertig:** Radon-Hintergrund ganz oben auf der Website („Radon allgemein“): Risiko 100 gegen 1 000 Bq/m³, Lunge und Kinder, österreichische Grenzwerte mit Geschichte, Quellen. Im Bericht unter Abschnitt 9.
+- **Fertig:** Weltkugel „Radon auf der ganzen Welt“ im Radon-Hintergrund: 41 Länder als Punkte in vier Klassen, Weltmittel 39 Bq/m³, Drehen per Ziehen oder Pfeiltasten, Drehung hält beim Fokus an und entfällt bei „Bewegung reduzieren“, Markierung „Dieses Haus“. Klassen aus Karten abgelesen (siehe Probleme).
+- **Fertig:** Dichte des Hauses per Kondensator-Modell (Abschnitt „Wie dicht ist das Haus?“, Nav „Dichtheit“): Abklingzeit im Urlaub, Eintrag von außen, Winter-Schätzung mit und ohne Lüftung. Modell in `build_site_data.py`, Daten `houseModel` in `data.js`. Im Bericht unter Abschnitt 5.
 - **In Arbeit:** –
-- **Als Nächstes:** Kategorie und Ziel klären, danach Plan für die Analyse.
+- **Als Nächstes:** Ziel und Abgabetermin klären, danach Plan für die Analyse.
 
 ## Karte
 
@@ -51,8 +58,8 @@ _Kosten = API-Listenpreise laut `scripts/prices.json`. Mit einem Claude-Abo (Pro
 |---|---|---|---|---|---|
 | Dataset | Rohdaten der Radon-, Raumluft- und Wettermessung | `Dataset/radon_sample_data.csv` | CSV, 29 Spalten, Zeitstempel in Spalte 1 (UTC) und 2 (Europe/Vienna) | – | – |
 | Ergebnisse | Ausführlicher Bericht der ersten Datensichtung | `docs/ergebnisse-sichtung.md` | Markdown-Bericht | – | Dataset |
-| Datenaufbereitung | Rechnet alle Kennzahlen und Diagrammdaten aus der CSV | `scripts/build_site_data.py`, `tests/` | schreibt `website/data.js` (`window.RADON_DATA`) | – | Dataset |
-| Website | Zeigt die Ergebnisse mit Diagrammen, rechnet selbst nichts | `website/index.html`, `styles.css`, `app.js`, `data.js` (generiert) | im Browser öffnen | – | Datenaufbereitung |
+| Datenaufbereitung | Rechnet alle Kennzahlen (inkl. Lüftungsvergleich, Kondensator-Modell der Hausdichte) und Diagrammdaten aus der CSV | `scripts/build_site_data.py`, `tests/` | schreibt `website/data.js` (`window.RADON_DATA`, u. a. Schlüssel `houseModel`) | – | Dataset |
+| Website | Zeigt die Ergebnisse mit Diagrammen (Radon-Hintergrund mit Weltkugel, Lüftungs- und Dichteabschnitt), rechnet selbst nichts außer der Projektion der Weltkugel | `website/index.html`, `styles.css`, `app.js`, `data.js` (generiert) | im Browser öffnen | – | Datenaufbereitung |
 
 Ablauf: CSV → `build_site_data.py` → `data.js` → `app.js` zeichnet die Diagramme als SVG.
 
@@ -67,14 +74,16 @@ Ablauf: CSV → `build_site_data.py` → `data.js` → `app.js` zeichnet die Dia
 
 Alle Werte aus Stundenmitteln, 0-Werte direkt nach einem Geräte-Neustart entfernt. Vermutungen sind als solche markiert.
 
-- **Urlaub:** Fr 31.07. ca. 05–07 Uhr bis Do 06.08. 20:03 Uhr. Erkennbar an CO₂ (kein Anstieg mehr, Abfall auf ca. 410 ppm). Radon steigt in dieser Zeit in allen Räumen auf 260–360 Bq/m³ (Mittel) und fällt nach der Rückkehr binnen ca. 1,5 h auf unter 25.
-- **Zweite Abwesenheit:** Mo 20.07. ca. 07–24 Uhr, gleiches Muster (Radon bis 250–500 Bq/m³).
-- **Vermutung:** In beiden Fällen war die Wohnraumlüftung aus oder gedrosselt – bei laufender Überdrucklüftung dürfte Radon in einem leeren Haus nicht steigen. Nicht belegt, beim Hausbesitzer nachfragen.
-- **Lüftungseinbau, Vermutung:** 30./31.03.2026. Küche davor im Mittel 204 Bq/m³ (24.–30.03.), danach 42 (April). Davor gibt es nur 6 Tage Daten von 1–3 Sensoren.
-- **Überdruck ist in den Daten nicht messbar:** Die Differenz Innen- zu Wetterdruck schwankt um ±0,5 hPa, ein Lüftungsüberdruck läge bei wenigen Pa.
+- **Urlaub:** Fr 31.07. ca. 05–07 Uhr bis Do 06.08. 20:03 Uhr. Erkennbar an CO₂ (kein Anstieg mehr, Abfall auf ca. 410 ppm). Radon steigt in dieser Zeit in allen Räumen auf 260–360 Bq/m³ (Mittel) und fällt nach der Rückkehr binnen ca. 1,5 h auf unter 25. Liegt vor dem Lüftungseinbau, bei geschlossenen Fenstern.
+- **Zweite Abwesenheit:** Mo 20.07. ca. 07–24 Uhr, gleiches Muster (Radon bis 250–500 Bq/m³). Ebenfalls vor dem Lüftungseinbau.
+- **Wohnraumlüftung ab 24.08.2026** (laut Hausbesitzer, bestätigt). Vergleich je 14 Tage vor/nach Start: Technikraum + Werkstatt 162 → 18 Bq/m³ (−89 %), Wohnräume 32 → 24 Bq/m³ (−25 %). Zeiträume: 10.–23.08. gegen 24.08.–06.09.
+- **Fenster gekippt ab 31.03.2026** (laut Hausbesitzer). Der Abfall im März ist darauf zurückzuführen, nicht auf die Lüftung. Küche: 204 Bq/m³ (24.–30.03.), danach 42 (April). Davor gibt es nur 6 Tage Daten von 1–3 Sensoren.
+- **Überdruck ist in den Daten nicht messbar:** Die Differenz Innen- zu Wetterdruck schwankt um ±0,5 hPa, ein Lüftungsüberdruck läge bei wenigen Pa. Die Erklärung „Überdruck hält Radon draußen“ ist die Aussage des Hausbesitzers, nicht durch die Messung belegt.
 - **Raum-Rangliste im Normalbetrieb** (gemeinsamer Zeitraum ab 13.05., ohne Urlaub, Mittel in Bq/m³): Werkstatt 60, Technikraum 56, Küche-Sockel 53, Schlafzimmer 43, Wohnzimmer 32, Küche 29, Büro 28.
 - **Rangliste im Urlaub:** Küche-Sockel 355, Schlafzimmer 347, Küche 296, Wohnzimmer 296, Werkstatt 284, Technikraum 267, Büro 256.
 - **Technikraum und Werkstatt** verhalten sich anders als die Wohnräume: 09.–21.08. bei 150–250 Bq/m³, während die Wohnräume bei ca. 30 liegen.
+- **Dichte des Hauses (Kondensator-Modell, Hausvolumen 675 m³ = 270 m² × 2,5 m, laut Hausbesitzer):** Im Urlaub steigt Radon nach einer Exponentialkurve mit Zeitkonstante τ ≈ 40 h auf einen Endwert ≈ 377 Bq/m³. Daraus: Luftwechsel ≈ 0,018/h (Lüftung aus, Fenster zu), Eintrag von außen ≈ 9,5 Bq/(m³·h), also ≈ 6 400 Bq/h für das ganze Haus. Nach der Rückkehr fällt der Wert mit τ ≈ 72 min (≈ 0,8/h), also weit schneller als der Luftwechsel im Urlaub. Ursache offen (Vermutung: Lüften bei der Rückkehr, nicht in den Daten belegt).
+- **Winter (Schätzung über Temperatur-Regression seit 24.08., 0 °C außen):** Geschlossenes Haus ≈ 1 060 Bq/m³ im Gleichgewicht, 300 Bq/m³ nach ca. 12 h (Sommer: ca. 60 h). Mit Lüftung im Winter: Wohnräume ca. 54, Technikraum/Werkstatt ca. 94 Bq/m³. Die Winter-Werte sind Extrapolation, nicht gemessen.
 - **CO₂ gibt es erst ab 08.05.** – Abwesenheiten davor sind nicht erkennbar.
 
 ## Bedienung
@@ -96,6 +105,13 @@ Keine Abhängigkeiten: nur Python-Standardbibliothek, im Browser kein Framework 
 | 2026-10-13 | Alle Berechnungen in Python, JavaScript zeichnet nur | Rechnung an einer Stelle, mit Tests prüfbar |
 | 2026-10-13 | Referenzwerte der Länder als Konstante in `app.js`, nicht in `data.js` | Literaturwerte, keine Messdaten; `data.js` bleibt rein aus der CSV erzeugt |
 | 2026-10-13 | Website nur lokal, nicht veröffentlicht | Daten zeigen, wann ein Privathaus leer stand |
+| 2026-11-17 | Lüftungsstart 24.08.2026 laut Hausbesitzer, nicht 30./31.03. (Annahme); Fenster gekippt ab 31.03. | Hausbesitzer hat bestätigt; der März-Abfall war die gekippten Fenster |
+| 2026-11-17 | Lüftungswirkung als Vergleich je 14 Tage vor/nach 24.08. | Gleich lange Zeiträume vor und nach dem Start; Urlaub liegt außerhalb; mit Python nachrechenbar |
+| 2026-11-17 | Kondensator-Modell (Gitter-Suche + lineare Regression, nur Standardbibliothek) für Hausdichte | Ein Modell mit wenigen Parametern, mit Tests prüfbar; keine Dependency nötig |
+| 2026-11-17 | Winter-Schätzung über Temperatur-Regression seit 24.08.; Luftwechsel konstant angenommen → Obergrenze | Im Winter gibt es keine geschlossene Phase zum Messen; Konstanz ist eine bewusste Vereinfachung |
+| 2026-11-17 | Hausvolumen 675 m³ laut Hausbesitzer (270 m² × 2,5 m) | Grundfläche und Raumhöhe vom Hausbesitzer, nicht vermessen |
+| 2026-11-17 | Weltkugel als handgeschriebenes SVG (orthografische Projektion), ohne Kartenbibliothek; Länder als Punkte statt Umrisse | Keine Dependency ohne Rücksprache; Punkte brauchen keine Geodaten |
+| 2026-11-17 | Länderwerte als vier Klassen (7–25, 25–50, 50–100, 100–184 Bq/m³) aus den Karten von Zielinski & Chambers 2008 abgelesen, keine exakten Landeswerte; Konstante `COUNTRIES` in `app.js` | Die Quelle liefert Karten, keine Tabelle; Klassen statt Scheingenauigkeit; gleiches Muster wie `REFERENCE_LEVELS` |
 
 ## Bekannte Probleme / Einschränkungen
 
@@ -104,3 +120,9 @@ Keine Abhängigkeiten: nur Python-Standardbibliothek, im Browser kein Framework 
 - **Betriebszeit-Zähler** springt gelegentlich um genau 31 min zurück.
 - **Schlafzimmer** ist ein anderer Sensortyp („RQ“ laut Jonas; Nachkommastellen, keine Betriebszeit) – nicht 1:1 mit den anderen Radonsensoren vergleichbar.
 - **Lücke** Technikraum/Werkstatt 11.–13.06. (38,7 h); Wetterdaten mit Lücken bis 14 h.
+- **Winter-Werte** (1 060 / 54 / 94 Bq/m³) sind Extrapolation aus Sommerdaten und Temperatur-Regression, keine Messung.
+- **Luftwechsel konstant** angenommen; im Winter (stärkeres Lüften, Temperaturunterschied) dürfte er höher sein, daher sind die Winter-Werte eine Obergrenze.
+- **Hausvolumen** 675 m³ ist eine Angabe des Hausbesitzers, nicht vermessen.
+- **Quellen 400/200 Bq/m³ und Frist 2018** (österreichische Grenzwerte) stammen nur aus Sekundärquellen, nicht aus dem Originaltext.
+- **Länderklassen der Weltkugel** sind aus Karten abgelesen (Zielinski & Chambers 2008, Daten bis 2007), nicht exakt und nicht aktuell. Sie zeigen Größenordnungen, keine Messwerte.
+- **UNSCEAR-Tabelle** selbst nicht lesbar; das Weltmittel 39 Bq/m³ stammt aus dem Zitat in Zielinski & Chambers (UNSCEAR 2000).

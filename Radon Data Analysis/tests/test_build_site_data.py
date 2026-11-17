@@ -4,9 +4,10 @@ Run from the project folder:
     python3.12 -m unittest discover tests
 """
 
+import math
 import sys
 import unittest
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
@@ -116,7 +117,7 @@ class PeriodTests(unittest.TestCase):
 
 
 class RoomProfileTests(unittest.TestCase):
-    def test_everyday_excludes_time_before_ventilation_absence_and_vacation(self) -> None:
+    def test_everyday_excludes_time_before_tilted_windows_absence_and_vacation(self) -> None:
         self.assertFalse(site.is_everyday(datetime(2026, 3, 30, 12)))
         self.assertFalse(site.is_everyday(datetime(2026, 7, 20, 12)))
         self.assertFalse(site.is_everyday(datetime(2026, 8, 3, 12)))
@@ -138,6 +139,72 @@ class RoomProfileTests(unittest.TestCase):
         self.assertEqual(profile["peakMonth"], 6)
         self.assertEqual(profile["peakMonthMean"], 22)
         self.assertEqual(profile["hoursOverHigh"], 1)
+
+
+class VentilationTests(unittest.TestCase):
+    def test_compare_uses_two_weeks_on_each_side_of_the_start(self) -> None:
+        start = site.VENTILATION_START_DAY
+        series: dict[date, float] = {}
+        for offset in range(-20, 21):
+            day = start + timedelta(days=offset)
+            # Outside the two-week windows the values are extreme and must be ignored.
+            if offset < -14 or offset >= 14:
+                series[day] = 999.0
+            else:
+                series[day] = 100.0 if offset < 0 else 10.0
+        result = site.compare_ventilation({"a": series, "b": series}, ["a", "b"])
+        self.assertEqual(result["before"], 100)
+        self.assertEqual(result["after"], 10)
+        self.assertEqual(result["beforeFirstDay"], (start - timedelta(days=14)).isoformat())
+        self.assertEqual(result["afterLastDay"], (start + timedelta(days=13)).isoformat())
+
+    def test_compare_skips_days_without_data(self) -> None:
+        start = site.VENTILATION_START_DAY
+        series = {start - timedelta(days=1): 50.0, start: 20.0}
+        result = site.compare_ventilation({"a": series}, ["a"])
+        self.assertEqual(result["before"], 50)
+        self.assertEqual(result["after"], 20)
+
+
+class HouseModelTests(unittest.TestCase):
+    def test_bucket_means_group_by_ten_minutes(self) -> None:
+        points = [(datetime(2026, 8, 6, 20, 3), 300.0), (datetime(2026, 8, 6, 20, 9), 100.0),
+                  (datetime(2026, 8, 6, 20, 10), 50.0)]
+        slots = site.bucket_means(points, 10)
+        self.assertEqual(slots[datetime(2026, 8, 6, 20, 0)], 200.0)
+        self.assertEqual(slots[datetime(2026, 8, 6, 20, 10)], 50.0)
+
+    def test_exponential_curve_reaches_63_percent_after_one_time_constant(self) -> None:
+        self.assertEqual(site.exponential_curve(0, 20.0, 120.0, 0.5), 20.0)
+        self.assertAlmostEqual(site.exponential_curve(2, 0.0, 100.0, 0.5), 63.2, places=1)
+
+    def test_fit_finds_parameters_of_a_charging_curve(self) -> None:
+        points = [(hour, site.exponential_curve(hour, 30.0, 400.0, 0.025)) for hour in range(150)]
+        fit = site.fit_exponential(points)
+        self.assertAlmostEqual(fit["rate"], 0.025, delta=0.0005)
+        self.assertAlmostEqual(fit["start"], 30.0, delta=1)
+        self.assertAlmostEqual(fit["end"], 400.0, delta=5)
+
+    def test_fit_finds_parameters_of_a_discharging_curve(self) -> None:
+        points = [(minute / 60, site.exponential_curve(minute / 60, 350.0, 25.0, 1.0)) for minute in range(0, 240, 10)]
+        fit = site.fit_exponential(points)
+        self.assertAlmostEqual(fit["rate"], 1.0, delta=0.02)
+        self.assertAlmostEqual(fit["end"], 25.0, delta=1)
+
+    def test_describe_house_uses_mass_balance(self) -> None:
+        house = site.describe_house({"rate": 0.025, "start": 30.0, "end": 400.0, "rmse": 3.0})
+        self.assertEqual(house["tauHours"], 40)
+        self.assertEqual(house["entryPerM3Hour"], 10.0)
+        self.assertAlmostEqual(house["airExchangePerHour"], 0.025 - site.RADON_DECAY_PER_HOUR, places=4)
+
+    def test_hours_until_level(self) -> None:
+        self.assertAlmostEqual(site.hours_until(50.0, 0.0, 100.0, 0.5), 2 * math.log(2))
+        self.assertIsNone(site.hours_until(300.0, 30.0, 250.0, 0.1))
+
+    def test_winter_factor_grows_with_temperature_difference(self) -> None:
+        # Radon = 50 - 1 * outdoor; at 20 °C indoor and outdoor it is 30, each kelvin adds 1/30.
+        self.assertAlmostEqual(site.winter_factor(-1.0, 50.0, 20.0, 20.0), 1.0)
+        self.assertAlmostEqual(site.winter_factor(-1.0, 50.0, 20.0, 5.0), 1.5)
 
 
 if __name__ == "__main__":

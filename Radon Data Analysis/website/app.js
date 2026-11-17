@@ -7,8 +7,6 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const MARGIN = { top: 28, right: 16, bottom: 28, left: 40 };
 const TARGET_TICK_COUNT = 4;
 const DOT_RADIUS = 4;
-const COLUMN_GAP = 2;
-const COLUMN_CORNER = 4;
 const TOOLTIP_OFFSET = 16;
 const NARROW_CHART_WIDTH = 560;
 const MS_PER_HOUR = 3600 * 1000;
@@ -253,62 +251,17 @@ function drawLineChart(config) {
 
 // ------------------------------------------------------------------ column chart
 
-// Rounded corners only at the top: the bottom edge stands on the baseline.
-function buildColumnPath(x, y, width, height) {
-  const radius = Math.min(COLUMN_CORNER, width / 2, height);
-  return `M${x},${y + height}V${y + radius}Q${x},${y} ${x + radius},${y}H${x + width - radius}`
-    + `Q${x + width},${y} ${x + width},${y + radius}V${y + height}Z`;
-}
-
-function drawColumnChart(config) {
-  const count = config.values.length;
-  const frame = createFrame(config.container, {
-    maxValue: Math.max(...config.values.filter((value) => value !== null)),
-    // Half a slot of padding on both sides so the first and last column fit inside the plot.
-    xDomain: [-0.5, count - 0.5],
-    xTicks: config.xTicks(config.container.clientWidth),
-    ariaLabel: config.ariaLabel,
-  });
-  drawAnnotations(frame, config);
-
-  const slotWidth = frame.xOf(1) - frame.xOf(0);
-  const columnWidth = Math.max(slotWidth - COLUMN_GAP, 1);
-  const columns = config.values.map((value, index) => {
-    if (value === null) return null;
-    const y = frame.yOf(value);
-    const column = createSvgElement("path", {
-      class: `column ${config.colorClassOf(index)}`,
-      d: buildColumnPath(frame.xOf(index) - columnWidth / 2, y, columnWidth, frame.bottom - y),
-    });
-    frame.svg.append(column);
-    return column;
-  });
-
-  function clearActive() {
-    columns.forEach((column) => column && column.classList.remove("is-active"));
-  }
-  function showColumn(index, clientX, clientY) {
-    clearActive();
-    if (columns[index] === null) return hideTooltip();
-    columns[index].classList.add("is-active");
-    const row = { value: `${decimalFormat.format(config.values[index])} ${config.unit}`, label: config.label };
-    showTooltip(config.formatX(index), [row], clientX, clientY);
-  }
-  attachSelection(frame, config.values.map((_, index) => frame.xOf(index)), showColumn, clearActive);
-}
-
 // ------------------------------------------------------------------ legends and tiles
 
 // With options.onToggle the entries become buttons that show or hide their series.
 function drawLegend(containerId, items, options = {}) {
   const container = document.getElementById(containerId);
   const isToggle = options.onToggle !== undefined;
-  const keyShape = options.isBox ? "legend-key is-box" : "legend-key";
   container.replaceChildren();
   for (const item of items) {
     const element = createHtmlElement(isToggle ? "button" : "span", "legend-item");
     // Only the key wears the series color; text stays in text colors so it is always readable.
-    element.append(createHtmlElement("span", `${keyShape} ${item.colorClass}`));
+    element.append(createHtmlElement("span", `legend-key ${item.colorClass}`));
     element.append(createHtmlElement("span", "legend-label", item.label));
     if (isToggle) {
       element.type = "button";
@@ -344,7 +297,7 @@ const GROUP_SERIES = [
 ];
 
 // Series the reader has hidden via the legend, per chart. Kept here so a redraw (resize) remembers it.
-const hiddenSeries = { overview: new Set(), vacation: new Set(), hourOfDay: new Set() };
+const hiddenSeries = { overview: new Set(), vacation: new Set(), ventilation: new Set(), hourOfDay: new Set() };
 
 function buildGroupSeries(source, hiddenKeys) {
   return GROUP_SERIES
@@ -403,7 +356,10 @@ function drawOverview(data) {
     formatX: (time) => longDayFormat.format(time),
     xTicks: () => xs.filter((time) => new Date(time).getDate() === 1).map((time) => ({ x: time, label: monthFormat.format(time) })),
     bands: [{ from: parseDay("2026-07-31"), to: parseDay("2026-08-07"), label: "Urlaub" }],
-    markers: [{ x: parseDay(data.ventilation.startDay), label: "Lüftung an (vermutet)" }],
+    markers: [
+      { x: parseDay(data.meta.windowsTiltedDay), label: "Fenster gekippt" },
+      { x: parseDay(data.ventilation.startDay), label: "Lüftung an" },
+    ],
     referenceLines: [{ value: data.meta.referenceLevel, label: "Referenzwert 300" }],
   });
 }
@@ -506,8 +462,8 @@ function setUpRankingToggle(data) {
 
 // Explanations are an interpretation of the data, not a measurement (see note under the table).
 const ROOM_REASONS = {
-  "Werkstatt": "hängt am Boden, wohl außerhalb der Lüftung",
-  "Technikraum": "hängt am Boden, wohl außerhalb der Lüftung",
+  "Werkstatt": "hängt am Boden, wird nicht über Fenster gelüftet; erst die Lüftung senkt den Wert",
+  "Technikraum": "hängt am Boden, wird nicht über Fenster gelüftet; erst die Lüftung senkt den Wert",
   "Küche-Sockel": "misst in Bodennähe, nah am Eintritt",
   "Schlafzimmer": "nachts geschlossen; anderer Sensortyp",
   "Wohnzimmer": "nachts zu, tagsüber gelüftet",
@@ -537,32 +493,118 @@ function drawRoomProfiles(data) {
   }
 }
 
+// For example "−89 %": real minus sign, no-break space so "%" never wraps alone.
+function formatPercentChange(compare) {
+  const percent = Math.round(((compare.after - compare.before) / compare.before) * 100);
+  const sign = percent < 0 ? "−" : "+";
+  return `${sign}${numberFormat.format(Math.abs(percent))}\u00a0%`;
+}
+
 function drawVentilation(data) {
-  const days = data.ventilation.days.map(parseDay);
-  const startIndex = data.ventilation.days.indexOf(data.ventilation.startDay);
+  const ventilation = data.ventilation;
+  const xs = ventilation.days.map(parseDay);
+  const beforeText = `Mittel ${dayFormat.format(parseDay(ventilation.utilityCompare.beforeFirstDay))}–23.08.`;
+  const afterText = `Mittel 24.08.–${dayFormat.format(parseDay(ventilation.utilityCompare.afterLastDay))}`;
   drawTiles("ventilation-tiles", [
-    { label: "Küche vor dem 31.03.", value: numberFormat.format(data.kpis.kitchenBeforeVentilation), unit: "Bq/m³", detail: "Mittel 24.–30.03." },
-    { label: "Küche danach", value: numberFormat.format(data.kpis.kitchenAfterVentilation), unit: "Bq/m³", detail: "Mittel 31.03.–30.04." },
-  ]);
-  drawLegend("ventilation-legend", [
-    { label: "vor dem 31.03.", colorClass: "color-neutral" },
-    { label: "ab dem 31.03.", colorClass: "color-series-1" },
-  ], { isBox: true });
-  drawColumnChart({
-    container: document.getElementById("ventilation-chart"),
-    ariaLabel: "Säulendiagramm: Radon-Tagesmittel in der Küche vom 24.03. bis 20.04. Pfeiltasten wählen einen Tag.",
-    values: data.ventilation.kitchen,
-    unit: "Bq/m³",
-    label: "Küche",
-    colorClassOf: (index) => (index < startIndex ? "color-neutral" : "color-series-1"),
-    formatX: (index) => longDayFormat.format(days[index]),
-    xTicks: (chartWidth) => {
-      const dayStep = chartWidth < NARROW_CHART_WIDTH ? 7 : 3;
-      return days.map((time, index) => ({ x: index, label: dayFormat.format(time) })).filter((_, index) => index % dayStep === 0);
+    { label: "Technikraum und Werkstatt vorher", value: numberFormat.format(ventilation.utilityCompare.before), unit: "Bq/m³", detail: beforeText },
+    {
+      label: "Technikraum und Werkstatt danach", value: numberFormat.format(ventilation.utilityCompare.after), unit: "Bq/m³",
+      detail: `${afterText}, ${formatPercentChange(ventilation.utilityCompare)}`,
     },
-    // The marker sits between the last column before and the first column after the start.
-    markers: [{ x: startIndex - 0.5, label: "Lüftung an (vermutet)" }],
+    { label: "Wohnräume vorher", value: numberFormat.format(ventilation.livingCompare.before), unit: "Bq/m³", detail: beforeText },
+    {
+      label: "Wohnräume danach", value: numberFormat.format(ventilation.livingCompare.after), unit: "Bq/m³",
+      detail: `${afterText}, ${formatPercentChange(ventilation.livingCompare)}`,
+    },
+  ]);
+  drawLineChart({
+    container: document.getElementById("ventilation-chart"),
+    ariaLabel: "Liniendiagramm: Radon-Tagesmittel vom 10.08. bis 20.09. vor und nach dem Einbau der Lüftung. Pfeiltasten wählen einen Tag.",
+    xs,
+    series: buildGroupSeries(ventilation, hiddenSeries.ventilation),
+    unit: "Bq/m³",
+    formatX: (time) => longDayFormat.format(time),
+    xTicks: (chartWidth) => {
+      const dayStep = chartWidth < NARROW_CHART_WIDTH ? 14 : 7;
+      return xs.filter((_, index) => index % dayStep === 0).map((time) => ({ x: time, label: dayFormat.format(time) }));
+    },
+    markers: [{ x: parseDay(ventilation.startDay), label: "Lüftung an" }],
   });
+}
+
+const HOURS_PER_DAY = 24;
+const MODEL_SERIES = [
+  { key: "measured", label: "Gemessen im Urlaub", colorClass: "color-neutral" },
+  { key: "summer", label: "Modell Sommer", colorClass: "color-series-1" },
+  { key: "winter", label: "Modell Winter bei 0 °C (Schätzung)", colorClass: "color-series-2" },
+];
+
+function formatHoursAsDays(hours) {
+  return `${numberFormat.format(hours)} h (${decimalFormat.format(hours / HOURS_PER_DAY)} Tage)`;
+}
+
+function drawHouseModel(data) {
+  const model = data.houseModel;
+  drawTiles("model-tiles", [
+    {
+      label: "Luftwechsel bei geschlossenem Haus", value: decimalFormat.format(model.living.airExchangePerHour * 100) + "\u00a0%",
+      unit: "pro Stunde", detail: `Die Luft ist erst nach ${numberFormat.format(Math.round(1 / model.living.airExchangePerHour))} h einmal getauscht`,
+    },
+    { label: "Zeitkonstante τ", value: numberFormat.format(model.living.tauHours), unit: "h", detail: "nach τ sind 63 % des Endwerts erreicht" },
+    {
+      label: "Radon-Zustrom", value: numberFormat.format(model.entryHousePerHour), unit: "Bq/h",
+      detail: `${decimalFormat.format(model.living.entryPerM3Hour)} Bq pro m³ und Stunde, ${numberFormat.format(model.volumeM3)} m³`,
+    },
+    {
+      label: "Fenster auf: Entladen", value: numberFormat.format(model.dischargeTauMinutes), unit: "min",
+      detail: `τ nach der Rückkehr, Luftwechsel ${decimalFormat.format(model.dischargeAirExchangePerHour)} pro Stunde`,
+    },
+  ]);
+  drawLegend("model-legend", MODEL_SERIES);
+  const xs = model.chart.hours;
+  drawLineChart({
+    container: document.getElementById("model-chart"),
+    ariaLabel: "Liniendiagramm: Radon in den Wohnräumen bei geschlossenem Haus, gemessen und berechnet für Sommer und Winter. Pfeiltasten wählen eine Stunde.",
+    xs,
+    series: MODEL_SERIES.map((series) => ({ ...series, values: model.chart[series.key] })),
+    unit: "Bq/m³",
+    formatX: (hours) => `nach ${formatHoursAsDays(hours)}`,
+    xTicks: (chartWidth) => {
+      const dayStep = chartWidth < NARROW_CHART_WIDTH ? 2 : 1;
+      return xs.filter((hours) => hours % (HOURS_PER_DAY * dayStep) === 0).map((hours) => ({ x: hours, label: `Tag ${hours / HOURS_PER_DAY}` }));
+    },
+    markers: [{ x: model.living.tauHours, label: `τ = ${model.living.tauHours} h` }],
+    referenceLines: [{ value: data.meta.referenceLevel, label: "Referenzwert 300" }],
+  });
+  document.getElementById("model-note").textContent =
+    `Modell und Messung weichen im Mittel um ${decimalFormat.format(model.living.rmse)} Bq/m³ voneinander ab. `
+    + `Technikraum und Werkstatt laden sich noch langsamer auf (τ = ${model.utility.tauHours} h). `
+    + "Das Hausvolumen stammt vom Hausbesitzer (3 Stockwerke mit je 90 m², 2,5 m Raumhöhe).";
+}
+
+function drawSeasonTable(data) {
+  const winter = data.houseModel.winter;
+  const rows = [
+    ["Haus zu, ohne Lüftung: Endwert", `${numberFormat.format(data.houseModel.living.end)} Bq/m³`, `≈ ${numberFormat.format(winter.closedEnd)} Bq/m³`],
+    ["Haus zu: Referenzwert 300 erreicht nach", formatHoursAsDays(winter.summerHoursTo300), formatHoursAsDays(winter.closedHoursTo300)],
+    ["Mit Lüftung: Wohnräume", `${numberFormat.format(data.ventilation.livingCompare.after)} Bq/m³`, `≈ ${numberFormat.format(winter.ventilatedLiving)} Bq/m³`],
+    ["Mit Lüftung: Technikraum und Werkstatt", `${numberFormat.format(data.ventilation.utilityCompare.after)} Bq/m³`, `≈ ${numberFormat.format(winter.ventilatedUtility)} Bq/m³`],
+  ];
+  const tableBody = document.querySelector("#season-table tbody");
+  tableBody.replaceChildren();
+  for (const [label, summer, winterText] of rows) {
+    const row = createHtmlElement("tr");
+    row.append(createHtmlElement("td", "", label), createHtmlElement("td", "num", summer), createHtmlElement("td", "num", winterText));
+    tableBody.append(row);
+  }
+  document.getElementById("season-note").textContent =
+    `So geschätzt: Ist es draußen um 1 Grad kälter, steigt Radon seit dem 24.08. in den Wohnräumen um ${decimalFormat.format(-winter.livingSlope)} Bq/m³ `
+    + `und in Technikraum und Werkstatt um ${decimalFormat.format(-winter.utilitySlope)} Bq/m³ `
+    + `(gemessen zwischen ${decimalFormat.format(winter.measuredOutdoorMin)} und ${decimalFormat.format(winter.measuredOutdoorMax)} °C, `
+    + `innen ${decimalFormat.format(winter.indoor)} °C). Daraus folgt bei 0 °C ein ${decimalFormat.format(winter.factor)}-mal so hoher Zustrom. `
+    + "Für das geschlossene Haus ist angenommen, dass der Luftwechsel gleich bleibt. Im Winter wird er durch den Kamineffekt "
+    + "eher größer, der Endwert ist deshalb eine Obergrenze. Zum Vergleich: Ende März (außen rund 4 °C, Fenster zu, Bewohner da) "
+    + "lagen die Wohnräume bei 100 bis 450 Bq/m³ im Tagesmittel.";
 }
 
 function drawHourOfDay(data) {
@@ -609,12 +651,207 @@ function drawReferenceLevels() {
   }
 }
 
+// ------------------------------------------------------------------ globe
+
+// Classes of the national arithmetic mean, read from the world maps in Zielinski & Chambers 2008
+// (WHO International Radon Project, data up to 2007). Only countries with a clearly readable colour.
+// Literature values, not measurements of this project, so they live here and not in data.js.
+const RADON_LEVELS = [
+  { colorClass: "level-1", range: "7 bis 25 Bq/m³", upperBound: 25 },
+  { colorClass: "level-2", range: "25 bis 50 Bq/m³", upperBound: 50 },
+  { colorClass: "level-3", range: "50 bis 100 Bq/m³", upperBound: 100 },
+  { colorClass: "level-4", range: "100 bis 184 Bq/m³", upperBound: Infinity },
+];
+
+function levelOf(mean) {
+  return RADON_LEVELS.find((level) => mean < level.upperBound);
+}
+// [name, longitude, latitude, index into RADON_LEVELS]; coordinates are rough country centres.
+const COUNTRIES = [
+  ["Finnland", 26, 64, 3], ["Schweden", 16, 62, 3], ["Tschechien", 15.5, 49.8, 3], ["Mexiko", -102, 23.6, 3],
+  ["Armenien", 45, 40.1, 3],
+  ["Norwegen", 9, 61, 2], ["Frankreich", 2.5, 46.5, 2], ["Spanien", -3.7, 40.2, 2], ["Portugal", -8, 39.6, 2],
+  ["Italien", 12.5, 42.8, 2], ["Irland", -8, 53.2, 2], ["Russland", 95, 60, 2], ["Indien", 79, 22, 2],
+  ["Iran", 53.7, 32.4, 2], ["Brasilien", -52, -10, 2], ["Südkorea", 127.8, 36.3, 2], ["Venezuela", -66.6, 7, 2],
+  ["Ecuador", -78.4, -1.5, 2],
+  ["USA", -98, 39, 1], ["Kanada", -100, 58, 1], ["Deutschland", 10.4, 51, 1], ["Polen", 19.4, 52, 1],
+  ["China", 104, 35, 1], ["Argentinien", -64, -35, 1], ["Peru", -75, -9.5, 1], ["Pakistan", 69, 30, 1],
+  ["Indonesien", 117, -2.5, 1], ["Algerien", 2.6, 28, 1], ["Rumänien", 25, 45.9, 1],
+  ["Großbritannien", -2, 54, 0], ["Niederlande", 5.3, 52.2, 0], ["Island", -18.6, 64.9, 0], ["Australien", 134, -25, 0],
+  ["Neuseeland", 172.5, -41.5, 0], ["Japan", 138, 36.5, 0], ["Ägypten", 30, 26.5, 0], ["Kuba", -79, 21.6, 0],
+  ["Saudi-Arabien", 45, 24, 0], ["Thailand", 101, 15, 0], ["Philippinen", 122, 12, 0], ["Chile", -71, -33, 0],
+];
+const HOUSE_POSITION = { lon: 14, lat: 48 };
+const GLOBE_SIZE = 400;
+const GLOBE_RADIUS = 190;
+const GLOBE_DOT_RADIUS = 7;
+const GRID_STEP_DEGREES = 30;
+const GRID_SAMPLE_DEGREES = 3;
+const DRAG_DEGREES_PER_PIXEL = 0.4;
+const KEY_STEP_DEGREES = 10;
+const AUTO_ROTATE_DEGREES_PER_FRAME = 0.08;
+const MAX_TILT_DEGREES = 80;
+const toRadians = (degrees) => (degrees * Math.PI) / 180;
+
+// Orthographic projection: the view a camera far away has of the sphere. view.lon/lat is the point in the middle.
+function projectOnGlobe(lon, lat, view) {
+  const phi = toRadians(lat);
+  const lambda = toRadians(lon - view.lon);
+  const phi0 = toRadians(view.lat);
+  // cos of the angle between point and view centre; below 0 the point is on the back side.
+  const visibility = Math.sin(phi0) * Math.sin(phi) + Math.cos(phi0) * Math.cos(phi) * Math.cos(lambda);
+  return {
+    x: GLOBE_SIZE / 2 + GLOBE_RADIUS * Math.cos(phi) * Math.sin(lambda),
+    y: GLOBE_SIZE / 2 - GLOBE_RADIUS * (Math.cos(phi0) * Math.sin(phi) - Math.sin(phi0) * Math.cos(phi) * Math.cos(lambda)),
+    isVisible: visibility > 0,
+  };
+}
+
+// One SVG path through the given [lon, lat] points; the line breaks where it goes behind the globe.
+function buildGlobeLine(points, view) {
+  let path = "";
+  let isDrawing = false;
+  for (const [lon, lat] of points) {
+    const point = projectOnGlobe(lon, lat, view);
+    if (!point.isVisible) {
+      isDrawing = false;
+      continue;
+    }
+    path += `${isDrawing ? "L" : "M"}${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+    isDrawing = true;
+  }
+  return path;
+}
+
+function buildGraticule(view) {
+  let path = "";
+  for (let lon = -180; lon < 180; lon += GRID_STEP_DEGREES) {
+    const meridian = [];
+    for (let lat = -90; lat <= 90; lat += GRID_SAMPLE_DEGREES) meridian.push([lon, lat]);
+    path += buildGlobeLine(meridian, view);
+  }
+  for (let lat = -60; lat <= 60; lat += GRID_STEP_DEGREES) {
+    const parallel = [];
+    for (let lon = -180; lon <= 180; lon += GRID_SAMPLE_DEGREES) parallel.push([lon, lat]);
+    path += buildGlobeLine(parallel, view);
+  }
+  return path;
+}
+
+function drawGlobeDot(svg, position, className, onShow) {
+  const dot = createSvgElement("circle", {
+    class: className, cx: position.x.toFixed(1), cy: position.y.toFixed(1), r: GLOBE_DOT_RADIUS,
+  });
+  dot.addEventListener("pointerenter", (event) => onShow(event.clientX, event.clientY));
+  dot.addEventListener("pointerleave", hideTooltip);
+  svg.append(dot);
+}
+
+function drawGlobe(container, view, houseMean) {
+  const svg = createSvgElement("svg", { viewBox: `0 0 ${GLOBE_SIZE} ${GLOBE_SIZE}`, "aria-hidden": "true" });
+  svg.append(createSvgElement("circle", { class: "globe-sea", cx: GLOBE_SIZE / 2, cy: GLOBE_SIZE / 2, r: GLOBE_RADIUS }));
+  svg.append(createSvgElement("path", { class: "globe-grid", d: buildGraticule(view) }));
+  for (const [name, lon, lat, levelIndex] of COUNTRIES) {
+    const position = projectOnGlobe(lon, lat, view);
+    if (!position.isVisible) continue;
+    const level = RADON_LEVELS[levelIndex];
+    drawGlobeDot(svg, position, `globe-dot ${level.colorClass}`, (x, y) => showTooltip(name,
+      [{ value: level.range, label: "Landesmittel", colorClass: level.colorClass }], x, y));
+  }
+  const house = projectOnGlobe(HOUSE_POSITION.lon, HOUSE_POSITION.lat, view);
+  if (house.isVisible) {
+    const houseLevel = levelOf(houseMean);
+    drawGlobeDot(svg, house, `globe-dot is-house ${houseLevel.colorClass}`, (x, y) => showTooltip("Dieses Haus",
+      [{ value: `${numberFormat.format(houseMean)} Bq/m³`, label: "Wohnräume im Alltag", colorClass: houseLevel.colorClass }], x, y));
+    const label = createSvgElement("text", { class: "globe-label", x: house.x + GLOBE_DOT_RADIUS + 4, y: house.y + 4 });
+    label.textContent = "Dieses Haus";
+    svg.append(label);
+  }
+  container.replaceChildren(svg);
+}
+
+function drawGlobeLevels() {
+  const list = document.getElementById("globe-levels");
+  list.replaceChildren();
+  for (let index = RADON_LEVELS.length - 1; index >= 0; index -= 1) {
+    const level = RADON_LEVELS[index];
+    const heading = createHtmlElement("h4", level.colorClass);
+    heading.append(createHtmlElement("span", "level-swatch"), createHtmlElement("span", "", level.range));
+    const names = COUNTRIES.filter((country) => country[3] === index).map((country) => country[0]);
+    const item = createHtmlElement("div");
+    item.append(heading, createHtmlElement("p", "", names.join(", ")));
+    list.append(item);
+  }
+}
+
+function setUpGlobe(data) {
+  const container = document.getElementById("globe");
+  const view = { lon: 15, lat: 25 };
+  const redraw = () => drawGlobe(container, view, data.kpis.everydayLivingMean);
+  const rotate = (deltaLon, deltaLat) => {
+    view.lon = ((view.lon + deltaLon + 540) % 360) - 180;
+    view.lat = Math.max(-MAX_TILT_DEGREES, Math.min(MAX_TILT_DEGREES, view.lat + deltaLat));
+    redraw();
+  };
+
+  // Turns slowly by itself until the reader touches it (not at all with reduced motion).
+  let isAutoRotating = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const stopAutoRotation = () => {
+    isAutoRotating = false;
+    document.getElementById("globe-pause").hidden = true;
+  };
+  const step = () => {
+    if (!isAutoRotating) return;
+    rotate(AUTO_ROTATE_DEGREES_PER_FRAME, 0);
+    window.requestAnimationFrame(step);
+  };
+
+  let dragStart = null;
+  container.addEventListener("pointerdown", (event) => {
+    stopAutoRotation();
+    hideTooltip();
+    dragStart = { x: event.clientX, y: event.clientY };
+    container.setPointerCapture(event.pointerId);
+  });
+  container.addEventListener("pointermove", (event) => {
+    if (dragStart === null) return;
+    // Dragging to the right turns the globe so that the western countries come into view.
+    rotate(-(event.clientX - dragStart.x) * DRAG_DEGREES_PER_PIXEL, (event.clientY - dragStart.y) * DRAG_DEGREES_PER_PIXEL);
+    dragStart = { x: event.clientX, y: event.clientY };
+  });
+  const endDrag = () => { dragStart = null; };
+  container.addEventListener("pointerup", endDrag);
+  // The browser cancels a touch gesture e.g. when the page starts to scroll.
+  container.addEventListener("pointercancel", endDrag);
+  container.addEventListener("pointerenter", stopAutoRotation);
+  container.addEventListener("focus", stopAutoRotation);
+  // Moving content needs a way to stop it (WCAG 2.2.2), also for keyboard and screen reader users.
+  const pauseButton = document.getElementById("globe-pause");
+  pauseButton.hidden = !isAutoRotating;
+  pauseButton.addEventListener("click", () => {
+    stopAutoRotation();
+    pauseButton.hidden = true;
+  });
+  container.addEventListener("keydown", (event) => {
+    const keySteps = { ArrowLeft: [-KEY_STEP_DEGREES, 0], ArrowRight: [KEY_STEP_DEGREES, 0], ArrowUp: [0, KEY_STEP_DEGREES], ArrowDown: [0, -KEY_STEP_DEGREES] };
+    if (!(event.key in keySteps)) return;
+    event.preventDefault();
+    stopAutoRotation();
+    rotate(...keySteps[event.key]);
+  });
+
+  drawGlobeLevels();
+  redraw();
+  window.requestAnimationFrame(step);
+}
+
 // ------------------------------------------------------------------ start
 
 function drawCharts(data) {
   drawOverview(data);
   drawVacation(data);
   drawVentilation(data);
+  drawHouseModel(data);
   drawHourOfDay(data);
 }
 
@@ -629,9 +866,12 @@ function start() {
   drawRanking(data, "everyday");
   setUpRankingToggle(data);
   drawRoomProfiles(data);
+  drawSeasonTable(data);
   drawReferenceLevels();
+  setUpGlobe(data);
   setUpSeriesToggle("overview-legend", hiddenSeries.overview, () => drawOverview(data));
   setUpSeriesToggle("vacation-legend", hiddenSeries.vacation, () => drawVacation(data));
+  setUpSeriesToggle("ventilation-legend", hiddenSeries.ventilation, () => drawVentilation(data));
   setUpSeriesToggle("hour-legend", hiddenSeries.hourOfDay, () => drawHourOfDay(data));
   drawCharts(data);
 

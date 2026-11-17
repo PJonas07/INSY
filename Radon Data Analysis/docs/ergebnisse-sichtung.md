@@ -1,6 +1,6 @@
 # Ergebnisse der Datensichtung – Radon-Messdaten
 
-Stand: 2026-10-13 · Datei: `Dataset/radon_sample_data.csv`
+Stand: 2026-11-17 · Datei: `Dataset/radon_sample_data.csv`
 
 Dieses Dokument fasst zusammen, was beim Durchsehen der Messdaten aufgefallen ist (Abschnitte 1–8), und erklärt den Hintergrund zu Radon (Abschnitt 9). Die Kennzahlen der Website rechnet `scripts/build_site_data.py`; die übrigen Zahlen stammen aus einmaligen Auswertungen.
 
@@ -11,8 +11,10 @@ Dieses Dokument fasst zusammen, was beim Durchsehen der Messdaten aufgefallen is
 1. **Das Haus ist im Alltag wenig belastet.** Die Wohnräume liegen im Mittel bei 28–43 Bq/m³. Der österreichische Referenzwert liegt bei 300 Bq/m³ im Jahresmittel.
 2. **Im Urlaub (31.07.–06.08.) steigt Radon auf gut das Achtfache** (Wohnräume im Mittel 310 statt 37 Bq/m³). Alle Räume liegen dann im Mittel bei 260–360 Bq/m³. Nach der Rückkehr fällt der Wert binnen etwa 1,5 Stunden auf unter 25.
 3. **Am stärksten betroffen** sind im Alltag Werkstatt und Technikraum, im Urlaub der Küchensockel und das Schlafzimmer.
-4. **Die Wohnraumlüftung wurde vermutlich am 30./31.03. in Betrieb genommen.** Die Küche fällt von 194 auf 42 Bq/m³ im Mittel.
-5. **Vermutung:** Im Urlaub und am 20.07. war die Lüftung aus oder gedrosselt. Das muss der Hausbesitzer bestätigen.
+4. **Ab 31.03. waren die Fenster gekippt** (laut Hausbesitzer). Die Küche fällt von 194 auf 42 Bq/m³ im Mittel.
+5. **Am 24.08. wurde die Wohnraumlüftung eingebaut** (laut Hausbesitzer). Technikraum und Werkstatt fallen von 162 auf 18 Bq/m³ (−89 %), die Wohnräume von 32 auf 24 (je 14 Tage davor und danach).
+6. **Im Urlaub und am 20.07.** gab es noch keine Lüftung, und die Fenster waren zu. Deshalb steigt Radon im leeren Haus.
+7. **Das Haus ist sehr dicht.** Im Urlaub lädt sich Radon wie ein Kondensator auf (τ = 40 h, Endwert 377 Bq/m³). Bei geschlossenem Haus wird die Luft nur 1,8 % pro Stunde getauscht; es kommen rund 6 400 Bq pro Stunde herein. Im Winter bei 0 °C wäre ein geschlossenes Haus ohne Lüftung nach etwa 12 h über 300 und käme auf rund 1 060 Bq/m³ (Schätzung). Mit Lüftung bleiben die Wohnräume bei etwa 54 Bq/m³.
 
 ## 2. Der Datensatz
 
@@ -99,9 +101,9 @@ Verglichen wird nur der Zeitraum, in dem alle sieben Sensoren gleichzeitig messe
 - **Das Büro** ist in jeder Lage der am wenigsten belastete Raum.
 - **Werkstatt und Technikraum** haben den höchsten Mittelwert, aber keine extremen Spitzen.
 
-## 5. Die Wohnraumlüftung
+## 5. Fenster und Wohnraumlüftung
 
-### Vermuteter Einbau: 30./31.03.2026
+### Fenster gekippt ab 31.03.2026
 
 | Zeitraum | Büro | Küche | Wohnzimmer |
 |---|---:|---:|---:|
@@ -111,9 +113,20 @@ Verglichen wird nur der Zeitraum, in dem alle sieben Sensoren gleichzeitig messe
 
 Tagesmittel der Küche rund um den Sprung: 24.03. 568, 25.03. 269, 28.03. 224, 30.03. 144, 31.03. 56, 06.04. 19. Die ersten Messwerte überhaupt liegen bei 540–560, der höchste Einzelwert bei 707.
 
-Einschränkung: Vor dem Sprung gibt es nur sechs Tage Daten, und das von einem bis drei Sensoren. Der Sprung ist deutlich, das Datum aber eine Vermutung.
+Ursache laut Hausbesitzer: Bis 30.03. waren die Fenster geschlossen, ab 31.03. gekippt. Die Lüftung gab es zu diesem Zeitpunkt noch nicht. Einschränkung: Vor dem Sprung gibt es nur sechs Tage Daten von einem bis drei Sensoren.
 
-### Die Lüftung wirkt, solange sie läuft
+### Lüftung eingebaut am 24.08.2026
+
+Die Lüftung hält im ganzen Haus einen leichten Überdruck. Dadurch strömt keine Bodenluft und damit kein Radon nach. Vergleich der Tagesmittel, je 14 Tage vor und nach dem Einbau (berechnet in `scripts/build_site_data.py`):
+
+| Zeitraum | Wohnräume | Technikraum und Werkstatt |
+|---|---:|---:|
+| 10.–23.08. | 32 | 162 |
+| 24.08.–06.09. | 24 | 18 |
+
+Technikraum und Werkstatt fallen innerhalb eines Tages von über 100 auf etwa 20 und bleiben dort. In den Wohnräumen ändert sich wenig, weil die gekippten Fenster dort schon vorher für niedrige Werte gesorgt haben. Vermutung: Technikraum und Werkstatt werden kaum über Fenster gelüftet, deshalb wirkt dort erst der Überdruck.
+
+### Nächte mit Radonstau
 
 Nächte, in denen sich Radon in den Wohnräumen staut (Mittel von 3 bis 6 Uhr über 90):
 
@@ -121,25 +134,75 @@ Nächte, in denen sich Radon in den Wohnräumen staut (Mittel von 3 bis 6 Uhr ü
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Nächte über 90 | 3 von 4 | 6 von 30 | 2 von 31 | 5 von 30 | 0 von 31 | 7 von 31 | 0 von 30 | 0 von 13 |
 
-Sechs der sieben August-Nächte gehören zum Urlaub. Seit dem 07.08. gab es nur noch eine solche Nacht (23.08.).
+Sechs der sieben August-Nächte gehören zum Urlaub. Seit dem 07.08. gab es nur noch eine solche Nacht (23.08., am Tag vor dem Einbau der Lüftung).
 
-### Vermutung: Lüftung im Urlaub und am 20.07. aus
+### Abwesenheiten: Fenster zu, noch keine Lüftung
 
-Bei laufender Überdrucklüftung dürfte Radon in einem leeren Haus nicht steigen. Genau das passiert aber zweimal:
+Wenn niemand zuhause ist, steigt Radon deutlich. Das passiert zweimal:
 
 - **Urlaub 31.07.–06.08.:** Anstieg auf 260–360 im Mittel, Abfall binnen 1,5 Stunden nach der Rückkehr.
 - **Mo 20.07.:** Ab 8 Uhr steigt Radon gleichmäßig, bis 23 Uhr auf 253 (Küche), 274 (Wohnzimmer) und 502 (Küche-Sockel). Um Mitternacht fällt es wieder, um 2 Uhr liegt die Küche bei 42.
 
-Beide Male passt das Muster zu einer ausgeschalteten oder gedrosselten Lüftung. Belegen lässt sich das aus den Daten nicht.
+Beide Abwesenheiten liegen vor dem 24.08. Es gab also noch keine Lüftung, und die Fenster waren vermutlich geschlossen. Nach der Rückkehr wird wieder gelüftet, und der Wert fällt.
 
 ### Der Überdruck ist nicht messbar
 
 Die Differenz zwischen Innendruck und Wetterdruck schwankt um etwa ±0,5 hPa, also ±50 Pa. Der Überdruck einer Lüftung liegt bei wenigen Pa. Auch im Moment der Rückkehr am 06.08. ist kein Drucksprung zu sehen. Die Wetterdaten sind dafür zu grob (stündlich, anderer Standort).
 
+### Wie dicht ist das Haus? Das Kondensator-Modell
+
+Während des Urlaubs (31.07. 06:00 bis 06.08. 20:00) war das Haus leer, die Fenster zu und die Lüftung noch nicht eingebaut. Für Radon gilt dann eine Bilanz:
+
+Änderung pro Stunde = Zustrom − (Luftwechsel + Zerfall) · Konzentration
+
+Die Lösung ist dieselbe Kurve wie beim Laden eines Kondensators über einen Widerstand:
+
+C(t) = C_Ende − (C_Ende − C_Start) · e^(−t/τ), mit τ = 1 / (Luftwechsel + Zerfall)
+
+| Kondensator | Haus |
+|---|---|
+| Ladespannung U₀ | Endwert C_Ende = Zustrom / (Luftwechsel + Zerfall) |
+| Zeitkonstante τ = R · C | τ = 1 / (Luftwechsel + Zerfall) |
+| großer Widerstand | dichtes Haus |
+| Laden | Haus zu |
+| Entladen | Fenster auf |
+
+**Kurvenanpassung** (`fit_exponential` in `scripts/build_site_data.py`): Für jede Rate k auf einem logarithmischen Raster von 0,001 bis 10 pro Stunde ist die Kurve eine Gerade in x = 1 − e^(−k·t). Start und Ende folgen dann aus einer linearen Regression; gewählt wird die Rate mit dem kleinsten Fehler. Radonzerfall: ln 2 / 3,82 Tage = 0,0076 pro Stunde. Hausvolumen laut Hausbesitzer: 3 × 90 m² × 2,5 m = 675 m³.
+
+| Größe | Wohnräume | Technikraum und Werkstatt |
+|---|---:|---:|
+| Zeitkonstante τ | 40 h | 109 h |
+| Startwert / Endwert | 27 / 377 Bq/m³ | 161 / 385 Bq/m³ |
+| mittlere Abweichung Modell–Messung | 16,4 Bq/m³ | 12,4 Bq/m³ |
+| Luftwechsel (1/τ − Zerfall) | 0,018 pro Stunde | 0,002 pro Stunde |
+| Zustrom (Endwert / τ) | 9,5 Bq/(m³·h) | 3,5 Bq/(m³·h) |
+
+Für das ganze Haus (Wohnräume-Werte × 675 m³) sind das rund **6 400 Bq pro Stunde**. Ein Luftwechsel von 0,018 pro Stunde heißt: Die Luft ist erst nach etwa 56 Stunden einmal getauscht. Zum Vergleich gelten für Wohnhäuser meist 0,3 bis 0,5 pro Stunde als ausreichend (Lehrbuchwert, nicht einzeln nachgeprüft). Das Haus ist bei geschlossenen Fenstern also sehr dicht.
+
+**Entladen nach der Rückkehr** (10-Minuten-Werte, 4 Stunden ab 06.08. 20:00): τ = 72 min, Luftwechsel 0,8 pro Stunde, also rund 45-mal so viel wie bei geschlossenem Haus.
+
+### Sommer und Winter
+
+Im Urlaub war es innen 25,0 °C und außen 25,6 °C, es gab also keinen Kamineffekt. Im Winter ist es innen wärmer als außen; die warme Luft steigt auf und zieht unten Bodenluft nach. Das zeigen die Daten seit dem 24.08. (Lüftung an): Pro Grad weniger Außentemperatur steigen die Tagesmittel in den Wohnräumen um 1,5 Bq/m³ und in Technikraum und Werkstatt um 3,5 Bq/m³ (lineare Regression, 51 Tage, außen 3,5 bis 23 °C).
+
+**Schätzung für 0 °C:**
+
+1. *Mit Lüftung:* Gerade bis 0 °C verlängert: Wohnräume etwa 54, Technikraum und Werkstatt etwa 94 Bq/m³.
+2. *Ohne Lüftung, Haus zu:* Der Zustrom wächst laut derselben Gerade um rund 8 % pro Kelvin Temperaturunterschied, bei 23 K also auf das 2,8-Fache (`winter_factor`). Mit gleichem τ ergibt das einen Endwert von rund 1 060 Bq/m³; 300 wären nach 12 statt 60 Stunden erreicht.
+
+| Lage | Sommer (gemessen) | Winter bei 0 °C (Schätzung) |
+|---|---:|---:|
+| Haus zu, ohne Lüftung: Endwert | 377 | ≈ 1 060 |
+| Haus zu: 300 erreicht nach | 60 h | 12 h |
+| Mit Lüftung: Wohnräume | 24 | ≈ 54 |
+| Mit Lüftung: Technikraum und Werkstatt | 18 | ≈ 94 |
+
+Einschränkungen: Die Gerade ist über den gemessenen Bereich hinaus verlängert. Im Winter wird der Luftwechsel durch den Kamineffekt eher größer, der Endwert ohne Lüftung ist deshalb eine Obergrenze. Als Anhaltspunkt aus den Messdaten: Ende März (außen rund 4 °C, Fenster zu, Bewohner da) lagen die Wohnräume bei 100 bis 450 Bq/m³ im Tagesmittel.
+
 ## 6. Weitere Auffälligkeiten
 
 - **Zwei Raumgruppen.** Büro, Küche, Wohnzimmer und Schlafzimmer verlaufen fast gleich (Korrelation 0,90–0,97). Technikraum und Werkstatt sind untereinander praktisch identisch (0,98), hängen mit den Wohnräumen aber nur lose zusammen (etwa 0,55).
-- **Technikraum und Werkstatt gehen eigene Wege.** Bis Mitte Mai liegen sie bei etwa 10. Später gibt es mehrtägige Phasen mit 150–250, während die Wohnräume bei etwa 30 bleiben: 25.–27.05., 09.–14.08. und 16.–21.08. Vermutung: Diese Räume liegen außerhalb des Überdruckbereichs.
+- **Technikraum und Werkstatt gehen eigene Wege.** Bis Mitte Mai liegen sie bei etwa 10. Später gibt es mehrtägige Phasen mit 150–250, während die Wohnräume bei etwa 30 bleiben: 25.–27.05., 09.–14.08. und 16.–21.08. Ab dem Einbau der Lüftung am 24.08. verschwinden diese Phasen.
 - **Tagesgang in den Wohnräumen.** Höchstwerte gegen 6 Uhr früh, Tiefstwerte gegen 18 Uhr (Küche 70 gegen 31). Technikraum und Werkstatt haben fast keinen Tagesgang.
 - **Wetter erklärt wenig.** Luftdruck, Wind und Außentemperatur korrelieren mit Radon in den Wohnräumen unter 0,2. Nur Technikraum und Werkstatt hängen mäßig an der Bodentemperatur in 54 cm Tiefe (0,49).
 - **Kein Wochentagsmuster.** Die Mittelwerte liegen an allen sieben Tagen zwischen 37 und 43.
@@ -155,11 +218,10 @@ Die Differenz zwischen Innendruck und Wetterdruck schwankt um etwa ±0,5 hPa, al
 
 ## 8. Offene Fragen an den Hausbesitzer
 
-1. Wann wurde die Wohnraumlüftung eingebaut oder eingeschaltet? Passt der 30./31.03.?
-2. War die Lüftung im Urlaub (31.07.–06.08.) und am 20.07. aus oder gedrosselt?
-3. Wo liegen Technikraum und Werkstatt, und sind sie an die Lüftung angeschlossen?
-4. Was ist am 16.04., 06.07., 30.08., 10.09. und 16.09. passiert (Stromausfall, Update)?
-5. Sind die vielen 0-Werte in Technikraum und Werkstatt von April bis Juni plausibel?
+1. ~~Wann wurde die Wohnraumlüftung eingebaut?~~ Geklärt: am 24.08.; der Sprung am 30./31.03. kam von gekippten Fenstern.
+2. Wo liegen Technikraum und Werkstatt, und werden sie über Fenster gelüftet?
+3. Was ist am 16.04., 06.07., 30.08., 10.09. und 16.09. passiert (Stromausfall, Update)?
+4. Sind die vielen 0-Werte in Technikraum und Werkstatt von April bis Juni plausibel?
 
 ## 9. Hintergrund: Radon allgemein
 
@@ -183,6 +245,32 @@ Zahlen dazu:
 - In Österreich sind es rund 10 % der Lungenkrebstodesfälle. Nach dem Rauchen ist Radon die zweithäufigste Ursache (AGES).
 - Im Freien liegt Radon bei 5 bis 15 Bq/m³ (WHO).
 
+### Wie ernst ist das? 100 gegen 1 000 Bq/m³
+
+Die größte europäische Studie (Darby u. a. 2005, 13 Fall-Kontroll-Studien, 7 148 Lungenkrebsfälle, 14 208 Kontrollen) fand:
+
+- 8,4 % mehr Risiko je 100 Bq/m³ gemessenem Radon, 16 % nach Korrektur der Messunsicherheit (Langzeitmittel).
+- Der Zusammenhang ist linear, ohne Schwelle; er gilt auch unter 200 Bq/m³.
+- Der Anteil ist für Raucher und Nichtraucher gleich. Raucher haben aber ein etwa 25-mal so hohes Grundrisiko.
+
+Risiko, bis 75 an Lungenkrebs zu sterben:
+
+| Radon im Langzeitmittel | Risiko gegenüber 0 | Nichtraucher | Raucher |
+|---|---:|---:|---:|
+| 0 Bq/m³ | 1,0-fach | 0,4 % | 10 % |
+| 100 Bq/m³ | 1,16-fach | 0,5 % | 12 % |
+| 400 Bq/m³ | 1,64-fach | 0,7 % | 16 % |
+| 1 000 Bq/m³ (eigene Hochrechnung: 1 + 0,16 · 10) | 2,6-fach | ≈ 1,0 % | ≈ 26 % |
+
+Für dieses Haus (Alltag rund 37 Bq/m³) ergibt das etwa das 1,06-Fache. Die Urlaubswoche ändert am Jahresmittel kaum etwas.
+
+### Andere Organe, Kinder und Jugendliche
+
+- **WHO:** Außer Lungenkrebs ist bisher kein Krebsrisiko und keine andere Wirkung belegt. Andere Organe bekommen eine viel kleinere Dosis. Für Magenkrebs durch Radon im Trinkwasser fanden Studien keinen Zusammenhang.
+- **Kinder (Kendall & Smith, UKHSA):** Die Dosis pro eingeatmeter Menge ist bei Kindern größer, weil sie aber weniger Luft einatmen, ist die Jahresdosis ähnlich wie bei Erwachsenen.
+- **Leukämie bei Kindern:** Die UK Childhood Cancer Study fand keinen Zusammenhang mit Radon.
+- **Folgerung:** Es zählt die Summe über das Leben; wer früh in einem belasteten Haus wohnt, sammelt mehr Jahre an.
+
 ### Halbwertszeit
 
 Radon-222 hat eine Halbwertszeit von 3,8 Tagen (genauer 3,82). Nach dieser Zeit ist die Hälfte zerfallen. Das ist lang genug, um aus dem Boden ins Haus zu wandern, und kurz genug, dass ständig Strahlung entsteht.
@@ -204,6 +292,8 @@ Bezug zu den Messdaten: Nach dem Urlaub fiel das Radon im Wohnzimmer in gut ande
 2. **WHO (2009):** Empfohlen wird ein Referenzwert von 100 Bq/m³ und, wo das nicht erreichbar ist, höchstens 300.
 3. **EU:** Die Richtlinie 2013/59/Euratom (Artikel 74) schreibt allen Mitgliedstaaten einen Referenzwert von höchstens 300 Bq/m³ im Jahresmittel vor.
 4. **Österreich:** Strahlenschutzgesetz 2020 und Radonschutzverordnung (BGBl. II Nr. 470/2020) übernehmen genau diese Obergrenze: 300 Bq/m³ im Jahresmittel für Aufenthaltsräume und Arbeitsplätze.
+
+**Vorgeschichte in Österreich:** Bis 2020 gab es für Wohnungen keinen gesetzlichen Wert. Man orientierte sich an der EU-Empfehlung 90/143/Euratom (1990): 400 Bq/m³ für bestehende Gebäude, 200 Bq/m³ als Planungswert für Neubauten. Gesetzlich geregelt waren nur bestimmte Arbeitsplätze (Natürliche Strahlenquellen-Verordnung). Auslöser der Änderung waren die großen Sammelstudien um 2005 (Risiko ohne Schwelle, auch unter 200 Bq/m³). Danach senkte die WHO 2009 ihre Empfehlung auf 100 Bq/m³, die EU schrieb 2013 höchstens 300 Bq/m³ vor (Umsetzung bis Februar 2018), und Österreich setzte das 2020 um. Für bestehende Häuser sank der Wert damit von 400 auf 300 Bq/m³.
 
 Ein Referenzwert ist kein Grenzwert. Darunter ist man nicht automatisch sicher, und darüber drohen keine Strafen. Er sagt, ab wann man etwas unternehmen soll. Weil er für das Jahresmittel gilt, überschreitet ihn eine Woche mit 350 Bq/m³ wie im Urlaub nicht.
 
@@ -241,7 +331,12 @@ Entscheidend ist der Untergrund: viel Uran im Gestein, etwa in Granit, und ein B
 
 ### Quellen
 
-- [WHO: Radon and health](https://www.who.int/news-room/fact-sheets/detail/radon-and-health) – Empfehlung 100/300, Risiko, Eintrittswege
+- [WHO: Radon and health](https://www.who.int/news-room/fact-sheets/detail/radon-and-health) – Empfehlung 100/300, Risiko, Eintrittswege, keine anderen gesicherten Wirkungen
+- [Darby u. a. 2005, BMJ (PubMed)](https://pubmed.ncbi.nlm.nih.gov/15613366/) – 8,4 % bzw. 16 % je 100 Bq/m³, Risiko bis 75 Jahre
+- [Kendall & Smith: Doses from radon to children](https://researchportal.ukhsa.gov.uk/en/publications/doses-from-radon-and-its-decay-products-to-children/) – Dosis bei Kindern
+- [UK Childhood Cancer Study: radon gas](https://eprints.whiterose.ac.uk/85715/1/The%20United%20Kingdom%20Childhood%20Cancer%20Study%20of%20exposure%20to%20domestic%20sources%20of%20ionising%20radiation%3A%201%3A%20radon%20gas..pdf) – kein Zusammenhang mit Kinderkrebs
+- [Radonschutzverordnung, BGBl. II Nr. 470/2020](https://ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2020_II_470/BGBLA_2020_II_470.rtf) – 300 Bq/m³
+- [Land Oberösterreich: Radonvorsorge](https://www.land-oberoesterreich.gv.at/files/publikationen/us_radon_vorsorge_neubauten_sanierung.pdf) – frühere Richtwerte 400/200 Bq/m³
 - [AWMF-Leitlinie „Radon in Innenräumen“, 2022](https://register.awmf.org/assets/guideline_bkp/002-035l_S1_Radon-in-Innenraeumen_2022-02.pdf) – Halbwertszeit, Zerfallsprodukte, Wirkung in der Lunge
 - [ICRPaedia: Radon progeny](https://icrpaedia.org/Radon_progeny) – Zerfallsreihe
 - [ICRP Publication 126](https://icrpaedia.org/ICRP_Publication_126) – 300 Bq/m³ und 10 mSv pro Jahr
@@ -253,5 +348,6 @@ Entscheidend ist der Untergrund: viel Uran im Gestein, etwa in Granit, und ein B
 - [Health Canada: Radon action guide](https://www.canada.ca/en/health-canada/services/health-risks-safety/radiation/radon/action-guides/provinces-territories.html) – Auswertung 2024
 - [Studie zu Umhausen, 1994](https://pubmed.ncbi.nlm.nih.gov/8026968/) – Messwerte im Ötztal
 - [UKHSA: Radon levels](https://www.ukradon.org/information/level), [BAG Schweiz](https://www.bag.admin.ch/de/gesetzliche-bestimmungen-bezueglich-radon), [LfU Bayern](https://www.lfu.bayern.de/strahlung/radon_in_gebaeuden/faq_radon/index.htm), [Strålsäkerhetsmyndigheten](https://aarst.org/wp-content/uploads/2026/01/AARST_2025_Panel_Discussion_Sweden_Ronnqvist.pdf) – Werte anderer Länder
+- [Zielinski & Chambers 2008: Mapping of Residential Radon in the World](https://www.osti.gov/etdeweb/servlets/purl/21510212) – Landesmittel weltweit (Karten, WHO-IRP-Daten bis 2007), Weltmittel 39 Bq/m³ (UNSCEAR 2000, dort zitiert)
 
-Nicht einzeln nachgeprüft sind die Halbwertszeiten der Folgeprodukte (Lehrbuchwerte) und der US-Wert im Originaltext der EPA.
+Nicht im Originaltext gelesen (nur über Zusammenfassungen und Suchergebnisse): die Werte 400/200 Bq/m³ der EU-Empfehlung 90/143/Euratom, die Umsetzungsfrist Februar 2018 und die Kinderstudien. Nicht einzeln nachgeprüft sind außerdem die Halbwertszeiten der Folgeprodukte (Lehrbuchwerte) und der US-Wert im Originaltext der EPA.
