@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radon im Haus – Auswertung</title>
+<meta name="description" content="Auswertung der Radon-Messdaten eines Einfamilienhauses, März bis Oktober 2026.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Abschnitte">
+  <div class="container nav-inner">
+    <a class="nav-title" href="#top">Radon im Haus</a>
+    <ul class="nav-links">
+      <li><a href="#verlauf">Verlauf</a></li>
+      <li><a href="#urlaub">Urlaub</a></li>
+      <li><a href="#raeume">Räume</a></li>
+      <li><a href="#lueftung">Lüftung</a></li>
+      <li><a href="#tagesgang">Tagesgang</a></li>
+      <li><a href="#hintergrund">Hintergrund</a></li>
+      <li><a href="#daten">Daten</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main id="top">
+
+  <header class="container hero">
+    <p class="eyebrow" id="hero-period"></p>
+    <h1 class="display">Im Alltag kaum Radon. Im Urlaub das Achtfache.</h1>
+    <p class="lead">
+      Sieben Sensoren messen seit März 2026 das Radon in einem Einfamilienhaus.
+      Solange jemand zuhause ist, bleibt die Luft sauber. Steht das Haus leer, steigt der Wert in drei Tagen über den Referenzwert.
+    </p>
+
+    <dl class="tiles" id="kpi-tiles"></dl>
+    <p class="caption">
+      Alle Radonwerte in Bq/m³. Wohnräume = Mittel aus Büro, Küche, Küche-Sockel, Schlafzimmer und Wohnzimmer.
+      Der österreichische Referenzwert liegt bei 300 Bq/m³ im Jahresmittel.
+    </p>
+  </header>
+
+  <section class="container" id="verlauf">
+    <header>
+      <h2 class="title">Der ganze Zeitraum</h2>
+      <p class="body-muted">
+        Tagesmittel vom ersten bis zum letzten Messtag. Zwei Dinge fallen auf: der hohe Start im März und die Spitze Anfang August.
+      </p>
+    </header>
+    <figure class="chart">
+      <figcaption class="chart-title">Radon, Tagesmittel in Bq/m³</figcaption>
+      <div class="legend" id="overview-legend"></div>
+      <div class="plot" id="overview-chart"></div>
+    </figure>
+    <p class="note">
+      Ein Klick auf einen Eintrag der Legende blendet die Linie aus oder wieder ein. Die Achse passt sich an.
+      In den ersten Tagen misst nur der Küchensensor, die anderen kommen bis 13.05. dazu.
+      Technikraum und Werkstatt gehen ab Juli eigene Wege und bleiben im August zwei Wochen länger hoch.
+    </p>
+  </section>
+
+  <section class="container" id="urlaub">
+    <header>
+      <h2 class="title">Eine Woche ohne Bewohner</h2>
+      <p class="body-muted">
+        Am Freitag, 31.07., verlässt die Familie frühmorgens das Haus. Am Donnerstag, 06.08., um 20:03 Uhr ist sie zurück.
+        Das zeigt das CO₂ in der Küche: Ohne Menschen fällt es auf den Wert der Außenluft.
+      </p>
+    </header>
+    <figure class="chart">
+      <figcaption class="chart-title">Radon, Stundenmittel in Bq/m³</figcaption>
+      <div class="legend" id="vacation-legend"></div>
+      <div class="plot" id="vacation-radon-chart"></div>
+    </figure>
+    <figure class="chart">
+      <figcaption class="chart-title">CO₂ in der Küche, Stundenmittel in ppm</figcaption>
+      <div class="plot plot-small" id="vacation-co2-chart"></div>
+    </figure>
+    <div class="facts">
+      <div>
+        <h3 class="headline">Drei Tage Anstieg</h3>
+        <p>Das Radon steigt gleichmäßig von unter 80 auf über 350 Bq/m³ und bleibt dann auf diesem Niveau.</p>
+      </div>
+      <div>
+        <h3 class="headline">Anderthalb Stunden Abfall</h3>
+        <p>Nach der Rückkehr fällt das Wohnzimmer von 358 auf 40 Bq/m³. Die Werkstatt braucht dafür rund sechs Stunden.</p>
+      </div>
+      <div>
+        <h3 class="headline">Vermutung: Lüftung aus</h3>
+        <p>Bei laufender Überdrucklüftung dürfte Radon in einem leeren Haus nicht steigen. Belegt ist das nicht.</p>
+      </div>
+    </div>
+
+    <h3 class="headline table-heading">Weitere Abwesenheiten</h3>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th scope="col">Zeitraum</th><th scope="col">Dauer</th><th scope="col">Radon in den Wohnräumen</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Fr 31.07. ca. 05–07 Uhr bis Do 06.08. 20:03 Uhr</td><td>6,5 Tage</td><td>steigt auf 260–360 Bq/m³ im Mittel</td></tr>
+          <tr><td>Mo 20.07. ca. 07 bis 24 Uhr</td><td>17 Stunden</td><td>steigt bis 23 Uhr auf 250–500 Bq/m³</td></tr>
+          <tr><td>So 10.05. abends bis Mo 11.05. ca. 14:40 Uhr</td><td>16 Stunden</td><td>unauffällig</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">CO₂ wird erst seit 08.05. gemessen. Abwesenheiten davor sind nicht erkennbar.</p>
+  </section>
+
+  <section class="container" id="raeume">
+    <header>
+      <h2 class="title">Welcher Raum ist am stärksten betroffen?</h2>
+      <p class="body-muted">
+        Verglichen werden nur Stunden, in denen alle sieben Sensoren gleichzeitig messen (ab 13.05.).
+      </p>
+    </header>
+    <div class="segmented" role="group" aria-label="Zeitraum wählen">
+      <button type="button" data-period="everyday" aria-pressed="true">Alltag</button>
+      <button type="button" data-period="vacation" aria-pressed="false">Urlaub</button>
+    </div>
+    <figure class="chart">
+      <figcaption class="chart-title" id="ranking-title"></figcaption>
+      <div class="bars" id="ranking-chart"></div>
+    </figure>
+    <details>
+      <summary>Alle Werte als Tabelle</summary>
+      <div class="table-scroll">
+        <table id="ranking-table">
+          <thead>
+            <tr>
+              <th scope="col">Raum</th>
+              <th scope="col" class="num">Mittel</th>
+              <th scope="col" class="num">Median</th>
+              <th scope="col" class="num">Höchstes Stundenmittel</th>
+              <th scope="col" class="num">Stunden über 100</th>
+              <th scope="col" class="num">Stunden über 300</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </details>
+    <h3 class="headline table-heading">Raum für Raum: wann und warum</h3>
+    <div class="table-scroll">
+      <table id="room-profile-table" class="table-wide">
+        <thead>
+          <tr>
+            <th scope="col">Raum</th>
+            <th scope="col">Wann am Tag</th>
+            <th scope="col">Höchster Monat</th>
+            <th scope="col" class="num">Stunden über 100</th>
+            <th scope="col">Warum vermutlich</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="note">
+      Mittelwerte in Bq/m³ seit 31.03., ohne Urlaub und ohne 20.07. Die Spalte „Warum“ ist eine Deutung, kein Messergebnis.
+    </p>
+    <ul class="plain-list">
+      <li><strong>Wohnräume:</strong> morgens rund 2,5-mal so hoch wie abends, im Frühjahr und Herbst höher als im Sommer.</li>
+      <li><strong>Technikraum und Werkstatt:</strong> im April bei rund 10, vom 11. bis 20.08. bei Tagesmitteln über 200.</li>
+      <li><strong>Küche-Sockel:</strong> der einzige Sensor, der im Alltag über 300 kommt (Spitze 399 am 21.07.). Er liegt in 77 % der Stunden über dem Küchensensor im selben Raum.</li>
+      <li><strong>Büro:</strong> in jeder Lage der am wenigsten belastete Raum.</li>
+    </ul>
+  </section>
+
+  <section class="container" id="lueftung">
+    <header>
+      <h2 class="title">Die Wohnraumlüftung</h2>
+      <p class="body-muted">
+        Die Lüftung hält im Haus einen leichten Überdruck, damit kein Radon aus dem Boden nachströmt.
+        Zwischen 30. und 31.03. fällt der Wert in der Küche auf ein Viertel. Vermutlich ging die Anlage an diesem Tag in Betrieb.
+      </p>
+    </header>
+    <dl class="tiles tiles-two" id="ventilation-tiles"></dl>
+    <figure class="chart">
+      <figcaption class="chart-title">Küche, Tagesmittel in Bq/m³</figcaption>
+      <div class="legend" id="ventilation-legend"></div>
+      <div class="plot" id="ventilation-chart"></div>
+    </figure>
+    <p class="note">
+      Vor dem Sprung gibt es nur sieben Tage Daten von einem bis drei Sensoren. Das Datum ist deshalb eine Vermutung.
+      Der Überdruck selbst ist in den Daten nicht messbar: Er beträgt wenige Pascal, die Druckwerte schwanken um ±50 Pascal.
+    </p>
+  </section>
+
+  <section class="container" id="tagesgang">
+    <header>
+      <h2 class="title">Morgens am höchsten</h2>
+      <p class="body-muted">
+        In den Wohnräumen steigt Radon über Nacht und erreicht um 6 Uhr den Höchstwert. Tagsüber halbiert es sich.
+        Technikraum und Werkstatt haben fast keinen Tagesgang.
+      </p>
+    </header>
+    <figure class="chart">
+      <figcaption class="chart-title">Radon nach Uhrzeit, Mittel in Bq/m³ (ohne Urlaub)</figcaption>
+      <div class="legend" id="hour-legend"></div>
+      <div class="plot" id="hour-chart"></div>
+    </figure>
+  </section>
+
+  <section class="container" id="hintergrund">
+    <header>
+      <h2 class="title">Radon allgemein</h2>
+      <p class="body-muted">
+        Radon ist ein radioaktives Edelgas. Es entsteht im Boden, wenn Uran zerfällt, und ist unsichtbar und geruchlos.
+        Im Freien verdünnt es sich auf 5 bis 15 Bq/m³. In Häusern kann es sich sammeln.
+      </p>
+    </header>
+
+    <div class="subsection">
+      <h3 class="headline">Warum Radon schadet</h3>
+      <div class="prose">
+        <p>
+          <strong>Radon ist nicht giftig wie ein Gift, es ist radioaktiv.</strong> Chemisch reagiert das Edelgas mit nichts.
+          Das meiste eingeatmete Radon atmet man einfach wieder aus.
+        </p>
+        <p>
+          <strong>Gefährlich sind die Zerfallsprodukte.</strong> Aus Radon entstehen Polonium, Blei und Bismut.
+          Das sind keine Gase mehr, sondern winzige Metallteilchen. Sie heften sich an Staub, werden eingeatmet
+          und bleiben in den Bronchien hängen.
+        </p>
+        <p>
+          <strong>Dort zerfallen sie und senden Alphastrahlung aus.</strong> Alphastrahlung kommt im Gewebe nur
+          Bruchteile eines Millimeters weit, gibt ihre ganze Energie aber genau dort ab. Sie trifft die Zellen der
+          Bronchialschleimhaut und kann deren Erbgut schädigen. Daraus kann nach Jahren Lungenkrebs entstehen.
+        </p>
+        <p>
+          <strong>Die Zahlen dazu.</strong> Laut Weltgesundheitsorganisation (WHO) steigt das Lungenkrebsrisiko um etwa 16 %
+          je 100 Bq/m³ im Langzeitmittel. Weltweit gehen je nach Land 3 bis 14 % der Lungenkrebsfälle auf Radon zurück,
+          in Österreich rund 10 % der Lungenkrebstodesfälle. Nach dem Rauchen ist Radon die zweithäufigste Ursache.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="headline">Die Halbwertszeit: 3,8 Tage</h3>
+      <div class="prose">
+        <p>
+          Nach 3,8 Tagen ist die Hälfte einer Menge Radon-222 zerfallen. Das ist lang genug, um aus dem Boden ins Haus
+          zu wandern, und kurz genug, dass ständig Strahlung entsteht. Die Folgeprodukte zerfallen innerhalb von Minuten.
+        </p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Stoff</th><th scope="col">Halbwertszeit</th><th scope="col">Strahlung</th><th scope="col">Form</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Radon-222</td><td>3,8 Tage</td><td>Alpha</td><td>Gas</td></tr>
+            <tr><td>Polonium-218</td><td>3,1 Minuten</td><td>Alpha</td><td>Metallteilchen</td></tr>
+            <tr><td>Blei-214</td><td>27 Minuten</td><td>Beta</td><td>Metallteilchen</td></tr>
+            <tr><td>Bismut-214</td><td>20 Minuten</td><td>Beta</td><td>Metallteilchen</td></tr>
+            <tr><td>Polonium-214</td><td>0,00016 Sekunden</td><td>Alpha</td><td>Metallteilchen</td></tr>
+            <tr><td>Blei-210</td><td>22 Jahre</td><td>Beta</td><td>Metallteilchen</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose subsection">
+        <p>
+          <strong>Was das für dieses Haus heißt.</strong> Nach dem Urlaub fiel das Radon im Wohnzimmer in gut anderthalb
+          Stunden von 358 auf 40 Bq/m³. Durch Zerfall allein hätte das etwa zwölf Tage gedauert.
+          Das Radon ist also nicht zerfallen, es wurde hinausgelüftet.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="headline">Woher kommen die 300 Bq/m³?</h3>
+      <div class="prose">
+        <p>
+          <strong>Aus dem Strahlenschutz.</strong> Die Internationale Strahlenschutzkommission (ICRP) hält eine Dosis
+          in der Größenordnung von 10 Millisievert pro Jahr für die Obergrenze dessen, was man in Wohnungen hinnehmen sollte.
+          Umgerechnet auf Radon in der Raumluft ergibt das rund 300 Bq/m³.
+        </p>
+        <p>
+          <strong>Von dort ins Gesetz.</strong> Die WHO empfiehlt seit 2009 einen Referenzwert von 100 Bq/m³ und,
+          wo das nicht erreichbar ist, höchstens 300. Die EU-Richtlinie 2013/59/Euratom schreibt allen Mitgliedstaaten
+          einen Referenzwert von höchstens 300 Bq/m³ im Jahresmittel vor. Österreich hat genau diese Obergrenze übernommen:
+          im Strahlenschutzgesetz 2020 und in der Radonschutzverordnung.
+        </p>
+        <p>
+          <strong>Ein Referenzwert ist kein Grenzwert.</strong> Darunter ist man nicht automatisch sicher, und darüber
+          drohen keine Strafen. Er sagt, ab wann man etwas unternehmen soll. Er gilt für das Jahresmittel.
+          Eine Woche mit 350 Bq/m³ wie im Urlaub überschreitet ihn deshalb nicht.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="headline">Andere Länder sind strenger</h3>
+      <figure class="chart">
+        <figcaption class="chart-title">Referenzwert für Wohnräume in Bq/m³ (Jahresmittel)</figcaption>
+        <div class="bars bars-with-detail" id="levels-chart"></div>
+      </figure>
+      <div class="prose subsection">
+        <p>
+          <strong>Kanada</strong> hat seinen Richtwert 2007 von 800 auf 200 Bq/m³ gesenkt. In einer landesweiten Messung
+          von 2012 lagen 6,9 % der Bevölkerung darüber. Eine neuere Auswertung von 2024 kommt auf 17,8 % der Häuser.
+          Mit 37 Bq/m³ im Alltag läge das hier gemessene Haus auch nach kanadischem Maßstab weit darunter.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="headline">Wo die Hotspots liegen</h3>
+      <div class="prose">
+        <p>
+          Entscheidend ist der Untergrund: viel Uran im Gestein, etwa in Granit, und ein Boden, der Gas gut durchlässt.
+        </p>
+        <p>
+          <strong>Österreich.</strong> Am stärksten betroffen ist das Granitbergland im Mühlviertel und im Waldviertel,
+          dazu Teile Tirols und der Steiermark. 104 Gemeinden sind Radonschutzgebiet. Das bekannteste Beispiel ist
+          Umhausen im Ötztal: In einem Ortsteil lag der Median im Erdgeschoß bei 1 868 Bq/m³, im restlichen Ort bei 182.
+          Der Ortsteil steht auf lockerem Material eines alten Bergsturzes.
+        </p>
+        <p>
+          <strong>Kanada.</strong> Bei der Messung von 2012 lagen die meisten Häuser über dem Richtwert in New Brunswick (24,8 %),
+          Manitoba (23,7 %), im Yukon (19,6 %) und in Saskatchewan (16,3 %).
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="headline">Was die Bauweise ausmacht</h3>
+      <div class="prose">
+        <p>
+          <strong>Der Weg ins Haus.</strong> Radon kommt durch Risse im Boden, durch Fugen zwischen Boden und Wand
+          und durch undichte Rohr- und Kabeldurchführungen.
+        </p>
+        <p>
+          <strong>Der Kamineffekt.</strong> Warme Luft steigt im Haus nach oben. Unten entsteht ein leichter Unterdruck,
+          der Bodenluft ansaugt. Im Winter ist der Effekt am stärksten. Räume mit Erdkontakt sind deshalb am meisten belastet.
+          Dazu passt, dass hier der Sensor am Küchensockel die höchsten Werte zeigt.
+        </p>
+        <p>
+          <strong>Dichtheit wirkt in beide Richtungen.</strong> Eine dichte Bodenplatte hält Radon draußen. Dichte Fenster
+          und Wände halten es drinnen: Nach einer thermischen Sanierung können die Werte steigen, wenn weniger gelüftet wird.
+        </p>
+        <p>
+          <strong>Was man dagegen tut.</strong> Im Neubau eine durchgehende Fundamentplatte von mindestens 20 cm und dichte
+          Durchführungen, bei Bedarf eine Radondrainage, die Bodenluft über das Dach abführt. Im Bestand hilft es,
+          die Bodenplatte abzudichten oder die Bodenluft darunter abzusaugen. Eine Lüftung mit leichtem Überdruck
+          wie in diesem Haus dreht den Kamineffekt um: Die Luft drückt nach außen, statt Bodenluft anzusaugen.
+        </p>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="headline">Quellen</h3>
+      <ul class="plain-list sources">
+        <li><a href="https://www.who.int/news-room/fact-sheets/detail/radon-and-health">WHO: Radon and health</a> – Empfehlung 100/300, Risiko, Eintrittswege</li>
+        <li><a href="https://register.awmf.org/assets/guideline_bkp/002-035l_S1_Radon-in-Innenraeumen_2022-02.pdf">AWMF-Leitlinie „Radon in Innenräumen“, 2022</a> – Halbwertszeit, Zerfallsprodukte, Wirkung in der Lunge</li>
+        <li><a href="https://icrpaedia.org/Radon_progeny">ICRPaedia: Radon progeny</a> – Zerfallsreihe</li>
+        <li><a href="https://icrpaedia.org/ICRP_Publication_126">ICRP Publication 126</a> – 300 Bq/m³ und 10 mSv pro Jahr</li>
+        <li><a href="https://www.legislation.gov.uk/eudr/2013/59/article/74">Richtlinie 2013/59/Euratom, Artikel 74</a> – EU-Obergrenze</li>
+        <li><a href="https://www.ages.at/umwelt/radioaktivitaet/radon">AGES: Radon</a> – Österreich, Bauweise, Maßnahmen</li>
+        <li><a href="https://www.ages.at/ages/presse/news/detail/7-november-ist-europaeischer-radontag">AGES: Europäischer Radontag</a> – Lungenkrebs, 104 Gemeinden</li>
+        <li><a href="https://www.canada.ca/en/health-canada/services/environmental-workplace-health/reports-publications/radiation/cross-canada-survey-radon-concentrations-homes-final-report-health-canada-2012.html">Health Canada: Cross-Canada Survey 2012</a> – Richtwert und Provinzen</li>
+        <li><a href="https://pubmed.ncbi.nlm.nih.gov/8026968/">Studie zu Umhausen, 1994</a> – Messwerte im Ötztal</li>
+        <li><a href="https://www.ukradon.org/information/level">UKHSA: Radon levels</a>, <a href="https://www.bag.admin.ch/de/gesetzliche-bestimmungen-bezueglich-radon">BAG Schweiz</a>, <a href="https://www.lfu.bayern.de/strahlung/radon_in_gebaeuden/faq_radon/index.htm">LfU Bayern</a> – Werte anderer Länder</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="container" id="daten">
+    <header>
+      <h2 class="title">Die Daten</h2>
+      <p class="body-muted" id="data-summary"></p>
+    </header>
+    <div class="columns">
+      <div>
+        <h3 class="headline">Was beim Rechnen zu beachten ist</h3>
+        <ul class="plain-list">
+          <li>Nach einem Neustart melden die Geräte zunächst 0 Bq/m³. Diese Werte sind entfernt.</li>
+          <li>Technikraum und Werkstatt zeigen von April bis Juni viele 0-Werte ohne Neustart. Ob sie echt sind, ist offen.</li>
+          <li>Im Schlafzimmer misst ein anderer Sensortyp als in den übrigen Räumen. Die Werte sind nur eingeschränkt vergleichbar.</li>
+          <li>Technikraum und Werkstatt fehlen vom 11. bis 13.06. für 39 Stunden.</li>
+          <li>Wetterdaten (Luftdruck, Wind, Außentemperatur) erklären das Radon in den Wohnräumen kaum.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="headline">Offene Fragen an den Hausbesitzer</h3>
+        <ol class="plain-list">
+          <li>Wann wurde die Lüftung eingeschaltet – passt der 30./31.03.?</li>
+          <li>War sie im Urlaub und am 20.07. aus oder gedrosselt?</li>
+          <li>Wo liegen Technikraum und Werkstatt, und hängen sie an der Lüftung?</li>
+          <li>Was ist am 16.04., 06.07., 30.08., 10.09. und 16.09. passiert, als fast alle Geräte neu starteten?</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="container footer">
+  <p class="caption">Auswertung vom 13.10.2026. Ausführlicher Bericht: <code>docs/ergebnisse-sichtung.md</code>.</p>
+</footer>
+
+<div class="tooltip" id="tooltip" role="status" hidden></div>
+<p class="load-error" id="load-error" hidden>
+  Die Daten konnten nicht geladen werden. Erzeuge sie mit <code>python3.12 scripts/build_site_data.py</code> und lade die Seite neu.
+</p>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
